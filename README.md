@@ -84,6 +84,25 @@ rembg looks promising
 
 # sucess!
 ![alt text](image-12.png)
+
+# looks great!
+
+![alt text](image-13.png)
+# now on a spoon
+![alt text](image-14.png)
+
+# got a convex hull working!
+![alt text](image-15.png)
+
+# my mouse
+![alt text](image-16.png)
+# for two objects they are treated as one. need to fix
+![alt text](image-17.png)
+# works but has some weirness
+![alt text](image-18.png)
+# need to convert to vector
+
+
 # Summary
 ### -  *[Installation](#Installation)*
 <!-- ### -  *[Deveopment](#For-developers)* -->
