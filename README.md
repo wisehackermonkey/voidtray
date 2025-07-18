@@ -102,7 +102,72 @@ rembg looks promising
 ![alt text](image-18.png)
 # need to convert to vector
 
+# kinda working but has edge width problems
+![](image-19.png)
+# got the line width down
+![alt text](image-20.png)
 
+# figured out how to fill in the contours
+![alt text](image-21.png)
+
+# need to make line more smooth
+# got smoother but issues with blobbyness
+![alt text](image-22.png)
+changed some settings and got this. which is not bad
+
+![alt text](image-24.png)
+
+still bad output
+![](image-25.png)
+## im thinking now its the outline to svg causing the issues
+![alt text](image-26.png)
+hmm maybe not. the edge looks bad
+
+# found a cool algo called 
+# Ramer–Douglas–Peucker algorithm
+[Ramer–Douglas–Peucker algorithm | EKbana ML Study Group](https://ekbanaml.github.io/remote%20sensing%20and%20satellite%20image%20processing/RDP_algorithm/)
+![alt text](image-23.png)
+
+# trying this approach
+`pip install rdp`
+
+results wernt that impressive 
+and didnt solve my line width issue
+
+
+# trying another achetcture approach
+backend python
+front end javascript. with the goal of the javascript and opencv.js to polygon cut out the shapes
+
+pip install flask rembg pillow
+python app.py
+# got the polygon crop to work
+![alt text](image-27.png)
+# and the background remobal but the two combained is hard
+![alt text](image-28.png)
+
+# semi working crop
+![alt text](image-29.png)
+![alt text](image-30.png)
+
+
+# cool wow factor stuff
+![alt text](image-31.png)
+https://openjscad.xyz/#
+
+
+# cool color scheme doesnt work for arbitrary shapes
+![alt text](image-32.png)
+https://maker.js.org/playground/?script=Slot
+
+great polygon crop demo
+https://netplayer.gr/crop/
+
+![alt text](image-33.png)
+
+
+# razterizer
+https://github.com/jankovicsandras/imagetracerjs?tab=readme-ov-file#examples
 # Summary
 ### -  *[Installation](#Installation)*
 <!-- ### -  *[Deveopment](#For-developers)* -->

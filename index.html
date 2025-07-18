@@ -1,9 +1,95 @@
 <!DOCTYPE html>
-  <html>
-  <head>
-    <title>voidtray</title>
-  </head>
-  <body>
-    <h1>voidtray</h1>
-  </body>
-  </html>
+<html>
+<head>
+  <title>Polygon Crop</title>
+  <style>
+    canvas { box-shadow: 0 0 10px black; margin: 20px; }
+    .spot {
+      position: absolute;
+      background-color: #000;
+      width: 5px;
+      height: 5px;
+    }
+  </style>
+</head>
+<body>
+  <button id="crop">Crop</button>
+  <div style="position:relative">
+    <canvas id="myCanvas" width="400" height="300"></canvas>
+  </div>
+  <div id="myimg"></div>
+
+  <script>
+    const getMousePos = (canvas, evt) => {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    };
+
+    const drawDot = (x, y) => {
+      const dot = document.createElement('div');
+      dot.className = 'spot';
+      dot.style.left = `${x}px`;
+      dot.style.top = `${y}px`;
+      document.body.appendChild(dot);
+    };
+
+    const clearDots = () => {
+      document.querySelectorAll('.spot').forEach(el => el.remove());
+    };
+
+    const cropPolygon = (canvas, image, points) => {
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = canvas.width;
+      maskCanvas.height = canvas.height;
+      const maskCtx = maskCanvas.getContext('2d');
+
+      maskCtx.beginPath();
+      maskCtx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) {
+        maskCtx.lineTo(points[i].x, points[i].y);
+      }
+      maskCtx.closePath();
+      maskCtx.clip();
+      maskCtx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      return maskCanvas.toDataURL('image/png');
+    };
+
+    const canvas = document.getElementById('myCanvas');
+    const ctx = canvas.getContext('2d');
+    const image = new Image();
+    const points = [];
+    let drawing = true;
+
+    image.onload = () => {
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    };
+    image.src = "/static/img.png";
+
+    canvas.addEventListener('mousedown', (e) => {
+      if (!drawing) return;
+      const pos = getMousePos(canvas, e);
+      points.push(pos);
+      drawDot(e.clientX, e.clientY);
+    });
+
+    document.getElementById('crop').addEventListener('click', () => {
+      drawing = false;
+      clearDots();
+      const cropped = cropPolygon(canvas, image, points);
+
+      fetch('/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: cropped })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('myimg').innerHTML = `<img src="/uploads/${data.filename}" />`;
+      });
+    });
+  </script>
+</body>
+</html>
