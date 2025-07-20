@@ -168,6 +168,162 @@ https://netplayer.gr/crop/
 
 # razterizer
 https://github.com/jankovicsandras/imagetracerjs?tab=readme-ov-file#examples
+
+# 20250720
+tring out pottrace for my bitmask image to vector convertion 
+https://pythonhosted.org/pypotrace/tutorial.html
+![1753038676613](image/README/1753038676613.png)
+pip install pypotrace
+doesnt support python 3.11.3 cry
+sometimes i picking the correct python version is a black art ARRRG
+![1753038993274](image/README/1753038993274.png)
+
+conda create -n bgremove3_9
+conda install -c conda-forge pypotrace numpy 
+
+darn potrace and rembg have version conflict
+![1753039150452](image/README/1753039150452.png)
+https://github.com/danielgatis/rembg
+
+
+pip install vtracer
+![1753039594907](image/README/1753039594907.png)
+
+
+# successfully made a vector path!
+![1753041610699](image/README/1753041610699.png)
+
+i had to invert the vector first
+![1753041641307](image/README/1753041641307.png)
+
+# trying a another smoothing way
+
+pip install svgpathtools
+![1753042774733](image/README/1753042774733.png)
+
+# super smoonth
+ but not centered
+ ![1753043033174](image/README/1753043033174.png)
+ # best one yet.
+ ![1753043092315](image/README/1753043092315.png)
+ # too many points
+![1753043277448](image/README/1753043277448.png)
+
+ # i downsampled it but it looks kinda shit
+ ![1753043264148](image/README/1753043264148.png)
+ # much much easier to fix !
+ ![1753043340500](image/README/1753043340500.png)
+ 
+ # i have all the major pieces together for the image pipeline
+# heres the code structure i like
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Processor:
+    image: any
+
+    def gray(self):
+        self.image = np.mean(self.image, axis=2)
+        return self
+
+    def binary(self, t=128):
+        self.image = self.image > t
+        return self
+
+    def out(self):
+        return self.image
+
+img = Processor(imageio.imread("img.jpg")).gray().binary().out()
+
+```
+
+# more full example
+```python
+ from dataclasses import dataclass
+import tempfile
+from pathlib import Path
+import shutil
+
+@dataclass
+class ImagePipeline:
+    original_path: Path
+    temp_dir: Path = tempfile.mkdtemp()
+    current_path: Path = None
+
+    def open_image(self):
+        # Load original image and save to temp
+        # self.current_path = Path(self.temp_dir) / "step_open.png"
+        # ...
+        return self
+
+    def remove_background(self, alpha_thresh: int = 128):
+        # Use self.current_path -> write new temp file
+        # self.current_path = Path(self.temp_dir) / "step_bg_removed.png"
+        # ...
+        return self
+
+    def create_tool_contour(self, level: float = 0.5):
+        # self.current_path = Path(self.temp_dir) / "step_contour.png"
+        # ...
+        return self
+
+    def bitmask_to_svg(self, **vtracer_options):
+        # self.current_path = Path(self.temp_dir) / "step_vector.svg"
+        # ...
+        return self
+
+    def smooth_vector(self, smoothing: float = 0.1):
+        # self.current_path = Path(self.temp_dir) / "step_smoothed.svg"
+        # ...
+        return self
+
+    def save(self, output_path: Path):
+        # shutil.copy(self.current_path, output_path)
+        return self
+
+    def cleanup(self):
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+
+# Example usage
+if __name__ == "__main__":
+    result = (
+        ImagePipeline(Path("input.jpg"))
+        .open_image()
+        .remove_background(alpha_thresh=128)
+        .create_tool_contour(level=0.5)
+        .bitmask_to_svg()
+        .smooth_vector(smoothing=0.1)
+        .save(Path("output.svg"))
+    )
+
+```
+
+# the scan worked really well!
+![1753044729031](image/README/1753044729031.png)
+```javascript
+// Parameters
+svg_file = "C:\Users\oran\github\voidtray\test\images\smoothed_output.svg";  // Path to your SVG file
+extrude_height = 5;        // Height in mm to extrude
+
+linear_extrude(height = extrude_height)
+    scale([0.264583, 0.264583])  // scale from px to mm (1 px ≈ 0.264583 mm at 96 DPI)
+        import(file = svg_file);
+
+```
+
+tutorial
+https://en.wikibooks.org/wiki/OpenSCAD_Tutorial/Chapter_1
+
+
+
+# got a demo working for the gridfinity base with a soild inside
+
+![1753046607515](image/README/1753046607515.png)
+
+# got the cut to work
+![1753047266253](image/README/1753047266253.png)
 # Summary
 ### -  *[Installation](#Installation)*
 <!-- ### -  *[Deveopment](#For-developers)* -->
