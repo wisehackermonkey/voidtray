@@ -241,11 +241,11 @@ img = Processor(imageio.imread("img.jpg")).gray().binary().out()
 
 # more full example
 ```python
- from dataclasses import dataclass
+from dataclasses import dataclass
 import tempfile
 from pathlib import Path
 import shutil
-
+# random image name with uuid
 @dataclass
 class ImagePipeline:
     original_path: Path
@@ -324,6 +324,9 @@ https://en.wikibooks.org/wiki/OpenSCAD_Tutorial/Chapter_1
 
 # got the cut to work
 ![1753047266253](image/README/1753047266253.png)
+
+kinda working with the cut out
+![1753048488559](image/README/1753048488559.png)
 # Summary
 ### -  *[Installation](#Installation)*
 <!-- ### -  *[Deveopment](#For-developers)* -->
