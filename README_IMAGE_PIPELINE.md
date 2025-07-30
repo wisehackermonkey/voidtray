@@ -96,7 +96,9 @@ still issues with scale but bettter
 
 # thats looking pretty good!
 ![1753916702470](image/README_IMAGE_PIPELINE/1753916702470.png)
-
+# got the full chain working!
+![1753918910871](image/README_IMAGE_PIPELINE/1753918910871.png)
+![1753918886650](image/README_IMAGE_PIPELINE/1753918886650.png)
 # final inteface
 - Remove shadows (gamma)
 - Image Exposure (good for removing shadows)
