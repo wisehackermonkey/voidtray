@@ -1,83 +1,43 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Polygon Crop</title>
-  <style>
-    canvas { box-shadow: 0 0 10px black; margin: 20px; }
-    .spot {
-      position: absolute;
-      background-color: #000;
-      width: 5px;
-      height: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Image to STL Processor</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        .hidden { display: none; }
+        #spinner { display: none; margin-top: 10px; }
+    </style>
 </head>
 <body>
-  <button id="crop">Crop</button>
-  <div style="position:relative">
-    <canvas id="myCanvas" width="400" height="300"></canvas>
-  </div>
-  <div id="myimg"></div>
+    <h1>Upload Image to Convert</h1>
 
-  <script>
-    const canvas = document.getElementById('myCanvas');
-    const ctx = canvas.getContext('2d');
-    const image = new Image();
-    const points = [];
-    let drawing = true;
+    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required><br><br>
+        <button type="submit" id="uploadBtn">Click here to upload image</button>
+    </form>
 
-    image.onload = () => {
-      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    };
-    image.src = "/static/img.png";
+    <div id="spinner">
+        <p>Processing... <img src="https://i.gifer.com/ZZ5H.gif" width="32"/></p>
+    </div>
 
-    canvas.addEventListener('mousedown', (e) => {
-      if (!drawing) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      points.push({ x, y });
+    {% if download_url %}
+    <br><br>
+    <a href="{{ download_url }}" download>
+        <button>Click here to download STL</button>
+    </a>
+    {% endif %}
 
-      // Draw dot
-      const dot = document.createElement('div');
-      dot.className = 'spot';
-      dot.style.left = `${e.clientX}px`;
-      dot.style.top = `${e.clientY}px`;
-      document.body.appendChild(dot);
-    });
+    <script>
+        const form = document.getElementById('uploadForm');
+        const spinner = document.getElementById('spinner');
+        const uploadBtn = document.getElementById('uploadBtn');
 
-    document.getElementById('crop').addEventListener('click', () => {
-      drawing = false;
-      document.querySelectorAll('.spot').forEach(el => el.remove());
-
-      const maskCanvas = document.createElement('canvas');
-      maskCanvas.width = canvas.width;
-      maskCanvas.height = canvas.height;
-      const maskCtx = maskCanvas.getContext('2d');
-
-      // Draw polygon mask
-      maskCtx.beginPath();
-      maskCtx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length; i++) {
-        maskCtx.lineTo(points[i].x, points[i].y);
-      }
-      maskCtx.closePath();
-      maskCtx.clip();
-
-      maskCtx.drawImage(image, 0, 0, canvas.width, canvas.height);
-      const croppedImage = maskCanvas.toDataURL('image/png');
-
-      // Upload to server
-      fetch('/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: croppedImage })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById('myimg').innerHTML = `<img src="/uploads/${data.filename}" />`;
-      });
-    });
-  </script>
+        form.addEventListener('submit', function() {
+            spinner.style.display = 'block';
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = "Uploading...";
+        });
+    </script>
 </body>
 </html>
