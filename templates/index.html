@@ -90,8 +90,6 @@
                 const reader = new FileReader();
                 reader.onloadend = function () {
                     croppedImageInput.value = reader.result;
-                    console.log(reader.result)
-                    alert("here");
                     uploadBtn.disabled = false;
                 };
                 reader.readAsDataURL(blob);

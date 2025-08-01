@@ -61,7 +61,7 @@ app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 app.config['STATIC_FOLDER'] = STATIC_FOLDER
 MEGABYTE = (2 ** 10) ** 2
 app.config['MAX_CONTENT_LENGTH'] = None
-app.config['MAX_FORM_MEMORY_SIZE'] = 50 * MEGABYTE
+app.config['MAX_FORM_MEMORY_SIZE'] = 100 * MEGABYTE
 
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -497,7 +497,7 @@ def stl_file_generator(svg_path):
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
-    return 'File Too Large', 413
+    return 'Image you uploaded is to Large, try again with a file less than 50 mb, we recommend https://imageresizer.com', 413
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
