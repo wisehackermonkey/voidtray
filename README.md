@@ -23,6 +23,18 @@ conda init powershell
 
 conda create -n voidtray 
 conda activate voidtray
+install mini conda (linux)
+
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+conda create python=3.10 voidtray
+
+conda create -n voidtray python=3.10
+conda activate voidtray
+
+pip3 install "rembg[cpu,cli]" cadquery numpy vtracer ezdxf Flask svgpathtools  matplotlib svgwrite pillow scikit-image
+pip3 install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 server:server
 
 conda install -c conda-forge scikit-image -y
 python -c "import skimage; print(skimage.__version__)"
