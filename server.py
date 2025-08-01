@@ -59,7 +59,10 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 app.config['STATIC_FOLDER'] = STATIC_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 16 MB
+MEGABYTE = (2 ** 10) ** 2
+app.config['MAX_CONTENT_LENGTH'] = None
+app.config['MAX_FORM_MEMORY_SIZE'] = 50 * MEGABYTE
+
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
@@ -492,6 +495,9 @@ def stl_file_generator(svg_path):
     print(f"STL exported to: {stl_output_path}")
 
 
+@app.errorhandler(413)
+def request_entity_too_large(error):
+    return 'File Too Large', 413
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -508,7 +514,7 @@ def upload_file():
         header, encoded = data_url.split(",", 1)
         image_data = base64.b64decode(encoded)
         image = Image.open(io.BytesIO(image_data))
-
+        
         filename = "cropped_upload.png"
         input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         image.save(input_path)
