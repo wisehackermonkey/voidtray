@@ -304,6 +304,17 @@
         .sync-button:hover {
             background: #218838;
         }
+
+
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        #container { width: 500px; height: 500px; position: relative; margin: 0 auto; }
+        #loadButton { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+        padding: 15px 30px; background: #4CAF50; color: white; border: none; 
+        border-radius: 5px; cursor: pointer; z-index: 100; }
+        #loadButton:hover { background: #45a049; }
+        #loadButton.hidden { display: none; }
+        #info { position: absolute; top: 20px; left: 20px; color: white; font-size: 14px; z-index: 100; }
+
     </style>
 </head>
 <body>
@@ -356,25 +367,32 @@
             <p>Processing... <img src="https://i.gifer.com/ZZ5H.gif" width="32"/></p>
         </div>
 
+        <a href="/">  <button class="btn-success">Reset</button></a>
         {% if download_url %}
         <br><br>
         <a href="{{ download_url }}" download>
             <button class="btn-success">Click here to download STL</button>
         </a>
-        {% endif %}
+        <div id="container">
+        <button id="loadButton">Load STL Model</button>
+        <div id="info">Mouse: rotate | Wheel: zoom</div>
     </div>
+        {% endif %}
+
+    </div>
+
 
     <!-- Scale Measurer Section -->
     <div class="section">
         <h1>Image Scale Measurer</h1>
         
-        <div class="instructions">
-            <h3>Instructions:</h3>
-            <p>1. Upload an image using the file input below (or use the same image from above)</p>
-            <p>2. The red scale line represents your chosen reference measurement</p>
-            <p>3. Drag the scale line to position it over a known measurement in your image</p>
-            <p>4. Resize the scale by dragging the circular handles at each end</p>
-            <p>5. The pixel-to-mm ratio will be calculated and can be synced to the form above</p>
+        <div class="canvas-container" id="canvasContainer" style="display: none;">
+            <canvas id="imageCanvas"></canvas>
+            <div class="scale-line" id="scaleLine">
+                <div class="scale-handle left" id="leftHandle"></div>
+                <div class="scale-handle right" id="rightHandle"></div>
+                <div class="scale-label" id="scaleLabel">85.6 mm</div>
+            </div>
         </div>
         
         <div class="upload-section">
@@ -435,7 +453,7 @@
                 <div class="reference-item" onclick="setReferenceSize(23, '₹5 Coin')">
                     <strong>₹5 Coin:</strong> 23 mm
                 </div>
-                <div class="reference-item" onclick="setReferenceSize(76.2, 'Post-it Note (Standard)')">
+                <div class="reference-item" onclick="setReferenceSize(76, 'Post-it Note (Standard)')">
                     <strong>Post-it Note (Standard):</strong> 76.2 mm
                 </div>
             </div>
@@ -447,14 +465,7 @@
             </div>
         </div>
         
-        <div class="canvas-container" id="canvasContainer" style="display: none;">
-            <canvas id="imageCanvas"></canvas>
-            <div class="scale-line" id="scaleLine">
-                <div class="scale-handle left" id="leftHandle"></div>
-                <div class="scale-handle right" id="rightHandle"></div>
-                <div class="scale-label" id="scaleLabel">85.6 mm</div>
-            </div>
-        </div>
+        
         
         <div class="info-panel">
             <div class="info-item">Image Size: <span id="imageSize">No image loaded</span></div>
@@ -464,6 +475,15 @@
             <div class="ratio-display">
                 Pixel to MM Ratio: <span id="pixelRatio">Upload an image to calculate</span>
             </div>
+        </div>
+
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <p>1. Upload an image using the file input below (or use the same image from above)</p>
+            <p>2. The red scale line represents your chosen reference measurement</p>
+            <p>3. Drag the scale line to position it over a known measurement in your image</p>
+            <p>4. Resize the scale by dragging the circular handles at each end</p>
+            <p>5. The pixel-to-mm ratio will be calculated and can be synced to the form above</p>
         </div>
     </div>
 
@@ -757,6 +777,179 @@
             document.getElementById('referenceLength').textContent = 
                 `${REFERENCE_MM} mm (${REFERENCE_NAME})`;
         }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer, mesh;
+        
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x222222);
+            
+            camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            camera.position.set(0, 0, 0);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(500, 500);
+            document.getElementById('container').appendChild(renderer.domElement);
+            
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            setupControls();
+            animate();
+        }
+        
+        function setupControls() {
+            let isMouseDown = false;
+            let mouseX = 0, mouseY = 0;
+            let targetRotationX = 0, targetRotationY = 0;
+            let currentRotationX = 0, currentRotationY = 0;
+            
+            renderer.domElement.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+            
+            renderer.domElement.addEventListener('mousemove', (e) => {
+                if (isMouseDown && mesh) {
+                    const deltaX = e.clientX - mouseX;
+                    const deltaY = e.clientY - mouseY;
+                    
+                    targetRotationY += deltaX * 0.01;
+                    targetRotationX += deltaY * 0.01;
+                    
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                }
+            });
+            
+            renderer.domElement.addEventListener('mouseup', () => {
+                isMouseDown = false;
+            });
+            
+            renderer.domElement.addEventListener('wheel', (e) => {
+                camera.position.z += e.deltaY * 0.01;
+                camera.position.z = Math.max(1, Math.min(200, camera.position.z));
+            });
+            
+            function updateRotation() {
+                if (mesh) {
+                    currentRotationX += (targetRotationX - currentRotationX) * 0.1;
+                    currentRotationY += (targetRotationY - currentRotationY) * 0.1;
+                    
+                    mesh.rotation.x = currentRotationX;
+                    mesh.rotation.y = currentRotationY;
+                }
+                requestAnimationFrame(updateRotation);
+            }
+            updateRotation();
+        }
+        
+        async function loadSTL() {
+            try {
+                const response = await fetch('/static/test4.stl');
+                if (!response.ok) throw new Error(`Oops! no 3d model generated. please try uploading an image then try again HTTP error! status: ${response.status}`);
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const geometry = parseSTL(arrayBuffer);
+                
+                if (mesh) scene.remove(mesh);
+                
+                const material = new THREE.MeshLambertMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
+                mesh = new THREE.Mesh(geometry, material);
+                
+                const box = new THREE.Box3().setFromObject(mesh);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                
+                mesh.position.sub(center);
+                const maxDim = Math.max(size.x, size.y, size.z);
+                mesh.scale.setScalar(13 / maxDim);
+                
+                scene.add(mesh);
+                document.getElementById('loadButton').classList.add('hidden');
+            } catch (error) {
+                alert('Error loading STL: ' + error.message);
+            }
+        }
+        
+        function parseSTL(buffer) {
+            const view = new DataView(buffer);
+            const isASCII = buffer.byteLength < 80 || new TextDecoder().decode(buffer.slice(0, 5)) === 'solid';
+            return isASCII ? parseASCIISTL(buffer) : parseBinarySTL(buffer);
+        }
+        
+        function parseBinarySTL(buffer) {
+            const view = new DataView(buffer);
+            const triangles = view.getUint32(80, true);
+            const geometry = new THREE.BufferGeometry();
+            const vertices = new Float32Array(triangles * 9);
+            const normals = new Float32Array(triangles * 9);
+            
+            let offset = 84;
+            for (let i = 0; i < triangles; i++) {
+                const normal = [view.getFloat32(offset, true), view.getFloat32(offset + 4, true), view.getFloat32(offset + 8, true)];
+                offset += 12;
+                
+                for (let j = 0; j < 3; j++) {
+                    const vertexIndex = i * 9 + j * 3;
+                    vertices[vertexIndex] = view.getFloat32(offset, true);
+                    vertices[vertexIndex + 1] = view.getFloat32(offset + 4, true);
+                    vertices[vertexIndex + 2] = view.getFloat32(offset + 8, true);
+                    
+                    normals[vertexIndex] = normal[0];
+                    normals[vertexIndex + 1] = normal[1];
+                    normals[vertexIndex + 2] = normal[2];
+                    
+                    offset += 12;
+                }
+                offset += 2;
+            }
+            
+            geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+            return geometry;
+        }
+        
+        function parseASCIISTL(buffer) {
+            const text = new TextDecoder().decode(buffer);
+            const lines = text.split('\n');
+            const vertices = [];
+            const normals = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line.startsWith('facet normal')) {
+                    const normal = line.split(' ').slice(2).map(parseFloat);
+                    i++;
+                    for (let j = 0; j < 3; j++) {
+                        i++;
+                        const vertex = lines[i].trim().split(' ').slice(1).map(parseFloat);
+                        vertices.push(...vertex);
+                        normals.push(...normal);
+                    }
+                }
+            }
+            
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            return geometry;
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        
+        document.getElementById('loadButton').addEventListener('click', loadSTL);
+        init();
     </script>
 </body>
 </html>

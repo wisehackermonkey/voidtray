@@ -141,6 +141,10 @@ still issues with scale but bettter
 # got a better interface. and combined the measuring scale
 
 ![1754026003186](image/README_IMAGE_PIPELINE/1754026003186.png)
+
+# got the STL viewer working!
+![1754032717872](image/README_IMAGE_PIPELINE/1754032717872.png)
+
 # final inteface
 - Remove shadows (gamma)
 - Image Exposure (good for removing shadows)
