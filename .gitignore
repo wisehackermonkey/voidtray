@@ -9,3 +9,5 @@ node_modules
 *.sublime-workspace
 # Folder config file
 Desktop.ini
+static/test4.stl
+output/test4.dxf
