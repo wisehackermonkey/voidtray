@@ -46,6 +46,13 @@ conda install -c conda-forge jupyterlab -y
 # test jupyter
 jupyter lab
 ```
+
+```
+conda activate voidtray
+cd github/voidtray
+mkdir static
+python server.py
+
 # visit 
 http://localhost:8888/lab
 ![alt text](image.png)
