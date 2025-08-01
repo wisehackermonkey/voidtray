@@ -431,7 +431,7 @@ def count_grid_cells_for_dxf(dxf_path, cell_size=45):
     return columns, rows, min_x, min_y, max_x, max_y
 
 
-def stl_file_generator(svg_path):
+def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0):
 
     paths, _ = svg2paths(svg_path)
     doc = ezdxf.new(dxfversion='R2010')
@@ -442,8 +442,8 @@ def stl_file_generator(svg_path):
             start = segment.start
             end = segment.end
             # Scale SVG coords to mm here:
-            start_point = (start.real * svg_to_mm_scale, start.imag * svg_to_mm_scale)
-            end_point = (end.real * svg_to_mm_scale, end.imag * svg_to_mm_scale)
+            start_point = (start.real * mm_to_px_scale_ratio, start.imag * mm_to_px_scale_ratio)
+            end_point = (end.real * mm_to_px_scale_ratio, end.imag * mm_to_px_scale_ratio)
             msp.add_line(start_point, end_point)
 
     os.makedirs(os.path.dirname(dxf_path), exist_ok=True)
@@ -510,6 +510,8 @@ def index():
 def upload_file():
     # Check if croppedImage (base64) is provided
     data_url = request.form.get('croppedImage')
+    mm_to_px_scale_ratio = request.form.get("mm_per_pixel")
+    mm_to_px_scale_ratio = float(mm_to_px_scale_ratio)
     if data_url:
         header, encoded = data_url.split(",", 1)
         image_data = base64.b64decode(encoded)
@@ -548,7 +550,7 @@ def upload_file():
     )
 
     output_svg = os.path.join(OUTPUT_FOLDER, f"{base_name}")
-    stl_file_generator(f"{output_svg}_vector.svg")
+    stl_file_generator(f"{output_svg}_vector.svg",mm_to_px_scale_ratio)
 
     return render_template('index.html', download_url=url_for('static', filename="test4.stl"))
 if __name__ == '__main__':

@@ -2,51 +2,405 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Image to STL Processor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to STL Processor with Scale Measurer</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-        .hidden { display: none; }
-        #spinner { display: none; margin-top: 10px; }
-        #preview-container { margin-top: 20px; }
-        #imagePreview { max-width: 500px; max-height: 500px; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .hidden { 
+            display: none; 
+        }
+        
+        .upload-section {
+            text-align: center;
+        }
+        
+        .file-input {
+            margin: 10px 0;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        
+        .file-input:hover {
+            border-color: #007bff;
+        }
+        
+        input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        #preview-container { 
+            margin-top: 20px; 
+            text-align: center;
+        }
+        
+        #imagePreview { 
+            max-width: 500px; 
+            max-height: 500px; 
+        }
+        
+        #spinner { 
+            display: none; 
+            margin-top: 10px; 
+            text-align: center;
+        }
+        
+        .form-group {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        /* Scale Measurer Styles */
+        .canvas-container {
+            position: relative;
+            display: inline-block;
+            border: 2px solid #ddd;
+            margin: 20px 0;
+        }
+        
+        #imageCanvas {
+            display: block;
+            cursor: crosshair;
+        }
+        
+        .scale-line {
+            position: absolute;
+            height: 3px;
+            background: #ff0000;
+            cursor: move;
+            user-select: none;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+        }
+        
+        .scale-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #ff0000;
+            border: 2px solid white;
+            border-radius: 50%;
+            cursor: grab;
+            top: -6px;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+            opacity: 0.5;
+        }
+        
+        .scale-handle:active {
+            cursor: grabbing;
+        }
+        
+        .scale-handle.left {
+            left: -6px;
+        }
+        
+        .scale-handle.right {
+            right: -6px;
+        }
+        
+        .scale-label {
+            position: absolute;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+        
+        .reference-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .reference-objects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .reference-item {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .reference-item:hover {
+            background-color: #e9ecef;
+        }
+        
+        .reference-item strong {
+            color: #007bff;
+        }
+        
+        .custom-input-section {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+        }
+        
+        .custom-input-section input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100px;
+            margin: 0 10px;
+        }
+        
+        .custom-input-section button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .custom-input-section button:hover {
+            background: #0056b3;
+        }
+        
+        .info-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .info-item {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        
+        .ratio-display {
+            font-size: 18px;
+            color: #007bff;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            border: 2px solid #007bff;
+            margin-top: 10px;
+        }
+        
+        .instructions {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .sync-button {
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .sync-button:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
-    <h1>Upload Image to Convert</h1>
+    <!-- Image to STL Processor Section -->
+    <div class="section">
+        <h1>Image to STL Processor</h1>
 
-    <!-- File input (not in form) -->
-    <input type="file" id="fileInput" accept="image/*" required><br><br>
+        <div class="upload-section">
+            <div class="file-input">
+                <input type="file" id="fileInput" accept="image/*" required>
+            </div>
+        </div>
 
-    <!-- Image Preview -->
-    <div id="preview-container" class="hidden">
-        <img id="imagePreview" src="" alt="Image Preview">
+        <!-- Image Preview -->
+        <div id="preview-container" class="hidden">
+            <img id="imagePreview" src="" alt="Image Preview">
+            <br><br>
+            <button id="cropBtn" class="btn-primary">Click here to crop</button>
+        </div>
+
+        <!-- Form to upload cropped image -->
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="croppedImage" id="croppedImageInput">
+            
+            <div class="form-group">
+                <label for="mmPerPixel">mm to pixel scale ratio:</label>
+                <input type="number" step="any" name="mm_per_pixel" id="mmPerPixel" placeholder="e.g., 0.264" required>
+                <button type="button" id="syncRatioBtn" class="sync-button" disabled>↑ Get from Scale Measurer Below</button>
+            </div>
+            
+            <button type="submit" id="uploadBtn" class="btn-primary" disabled>Click here to upload image</button>
+        </form>
+
+        <!-- Spinner -->
+        <div id="spinner">
+            <p>Processing... <img src="https://i.gifer.com/ZZ5H.gif" width="32"/></p>
+        </div>
+
+        {% if download_url %}
         <br><br>
-        <button id="cropBtn">Click here to crop</button>
+        <a href="{{ download_url }}" download>
+            <button class="btn-success">Click here to download STL</button>
+        </a>
+        {% endif %}
     </div>
 
-    <!-- Form to upload cropped image -->
-    <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
-        <input type="hidden" name="croppedImage" id="croppedImageInput">
-        <br>
-        <button type="submit" id="uploadBtn" disabled>Click here to upload image</button>
-    </form>
-
-    <!-- Spinner -->
-    <div id="spinner">
-        <p>Processing... <img src="https://i.gifer.com/ZZ5H.gif" width="32"/></p>
+    <!-- Scale Measurer Section -->
+    <div class="section">
+        <h1>Image Scale Measurer</h1>
+        
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <p>1. Upload an image using the file input below (or use the same image from above)</p>
+            <p>2. The red scale line represents your chosen reference measurement</p>
+            <p>3. Drag the scale line to position it over a known measurement in your image</p>
+            <p>4. Resize the scale by dragging the circular handles at each end</p>
+            <p>5. The pixel-to-mm ratio will be calculated and can be synced to the form above</p>
+        </div>
+        
+        <div class="upload-section">
+            <div class="file-input">
+                <input type="file" id="scaleImageUpload" accept="image/*">
+                <button type="button" id="useAboveImageBtn" class="btn-primary" disabled>Use Image from Above</button>
+            </div>
+        </div>
+        
+        <div class="reference-section">
+            <h3>Reference Objects (Click to Use):</h3>
+            <div class="reference-objects">
+                <div class="reference-item" onclick="setReferenceSize(85.6, 'Credit Card')">
+                    <strong>Credit Card:</strong> 85.6 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(89, 'US Business Card')">
+                    <strong>US Business Card:</strong> 89 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(24.26, 'US Quarter')">
+                    <strong>US Quarter:</strong> 24.26 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(156, 'US $1 Bill')">
+                    <strong>US $1 Bill:</strong> 156 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(20, 'Mexican $5 MXN')">
+                    <strong>Mexican $5 MXN:</strong> 20 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(23, 'Mexican $10 MXN')">
+                    <strong>Mexican $10 MXN:</strong> 23 mm
+                </div>
+            </div>
+            <div class="custom-input-section">
+                <label for="customSize"><strong>Custom Size:</strong></label>
+                <input type="number" id="customSize" placeholder="0.0" step="0.1" min="0.1">
+                <span>mm</span>
+                <button onclick="setCustomReferenceSize()">Use Custom Size</button>
+            </div>
+        </div>
+        
+        <div class="canvas-container" id="canvasContainer" style="display: none;">
+            <canvas id="imageCanvas"></canvas>
+            <div class="scale-line" id="scaleLine">
+                <div class="scale-handle left" id="leftHandle"></div>
+                <div class="scale-handle right" id="rightHandle"></div>
+                <div class="scale-label" id="scaleLabel">85.6 mm</div>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-item">Image Size: <span id="imageSize">No image loaded</span></div>
+            <div class="info-item">Canvas Size: <span id="canvasSize">No image loaded</span></div>
+            <div class="info-item">Scale Length: <span id="scaleLength">200 pixels</span></div>
+            <div class="info-item">Reference Length: <span id="referenceLength">85.6 mm (Credit Card)</span></div>
+            <div class="ratio-display">
+                Pixel to MM Ratio: <span id="pixelRatio">Upload an image to calculate</span>
+            </div>
+        </div>
     </div>
-
-    {% if download_url %}
-    <br><br>
-    <a href="{{ download_url }}" download>
-        <button>Click here to download STL</button>
-    </a>
-    {% endif %}
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
+        // STL Processor variables
         const fileInput = document.getElementById('fileInput');
         const imagePreview = document.getElementById('imagePreview');
         const previewContainer = document.getElementById('preview-container');
@@ -55,9 +409,36 @@
         const croppedImageInput = document.getElementById('croppedImageInput');
         const form = document.getElementById('uploadForm');
         const spinner = document.getElementById('spinner');
+        const mmPerPixelInput = document.getElementById('mmPerPixel');
+        const syncRatioBtn = document.getElementById('syncRatioBtn');
+        const useAboveImageBtn = document.getElementById('useAboveImageBtn');
 
         let cropper;
+        let cropperImageData = null; // Store the cropped image data
 
+        // Scale Measurer variables
+        let canvas, ctx, scaleImage;
+        let isDragging = false;
+        let dragMode = 'move';
+        let dragStart = { x: 0, y: 0 };
+        let scalePosition = { x: 300, y: 200, width: 200 };
+        
+        let REFERENCE_MM = 85.6;
+        let REFERENCE_NAME = 'Credit Card';
+
+        // Initialize Scale Measurer
+        document.addEventListener('DOMContentLoaded', function() {
+            canvas = document.getElementById('imageCanvas');
+            ctx = canvas.getContext('2d');
+            
+            const scaleFileInput = document.getElementById('scaleImageUpload');
+            scaleFileInput.addEventListener('change', handleScaleImageUpload);
+            
+            setupScaleInteraction();
+            updateScaleDisplay();
+        });
+
+        // STL Processor functionality
         fileInput.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -66,6 +447,7 @@
             reader.onload = function (e) {
                 imagePreview.src = e.target.result;
                 previewContainer.classList.remove('hidden');
+                useAboveImageBtn.disabled = false;
 
                 if (cropper) cropper.destroy();
                 cropper = new Cropper(imagePreview, {
@@ -85,11 +467,11 @@
                 imageSmoothingQuality: 'high',
             });
             
-            // Convert canvas to base64 PNG
             canvas.toBlob(function (blob) {
                 const reader = new FileReader();
                 reader.onloadend = function () {
                     croppedImageInput.value = reader.result;
+                    cropperImageData = reader.result; // Store for scale measurer
                     uploadBtn.disabled = false;
                 };
                 reader.readAsDataURL(blob);
@@ -101,6 +483,186 @@
             uploadBtn.disabled = true;
             uploadBtn.textContent = "Uploading...";
         });
+
+        // Use image from above button
+        useAboveImageBtn.addEventListener('click', function() {
+            if (cropperImageData) {
+                // Use the cropped image data
+                loadImageToScaleMeasurer(cropperImageData);
+            } else if (imagePreview.src) {
+                // Use the original uploaded image
+                loadImageToScaleMeasurer(imagePreview.src);
+            }
+        });
+
+        // Sync ratio button
+        syncRatioBtn.addEventListener('click', function() {
+            const mmPerPixel = REFERENCE_MM / scalePosition.width;
+            mmPerPixelInput.value = mmPerPixel.toFixed(6);
+        });
+
+        function loadImageToScaleMeasurer(imageSrc) {
+            scaleImage = new Image();
+            scaleImage.onload = function() {
+                document.getElementById('canvasContainer').style.display = 'inline-block';
+                drawImageOnCanvas();
+                updateImageInfo();
+                updatePixelRatio();
+                syncRatioBtn.disabled = false;
+            };
+            scaleImage.src = imageSrc;
+        }
+
+        // Scale Measurer functionality
+        function handleScaleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                loadImageToScaleMeasurer(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function drawImageOnCanvas() {
+            canvas.width = scaleImage.width;
+            canvas.height = scaleImage.height;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(scaleImage, 0, 0);
+            
+            updateCanvasInfo();
+        }
+
+        function setupScaleInteraction() {
+            const scaleLine = document.getElementById('scaleLine');
+            const leftHandle = document.getElementById('leftHandle');
+            const rightHandle = document.getElementById('rightHandle');
+            
+            scaleLine.addEventListener('mousedown', function(e) {
+                if (e.target === leftHandle || e.target === rightHandle) return;
+                startDrag(e, 'move');
+            });
+            
+            leftHandle.addEventListener('mousedown', function(e) {
+                e.stopPropagation();
+                startDrag(e, 'resize-left');
+            });
+            
+            rightHandle.addEventListener('mousedown', function(e) {
+                e.stopPropagation();
+                startDrag(e, 'resize-right');
+            });
+            
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+        
+        function startDrag(e, mode) {
+            isDragging = true;
+            dragMode = mode;
+            const rect = document.getElementById('canvasContainer').getBoundingClientRect();
+            dragStart.x = e.clientX - rect.left;
+            dragStart.y = e.clientY - rect.top;
+            e.preventDefault();
+        }
+        
+        function handleDrag(e) {
+            if (!isDragging) return;
+            
+            const rect = document.getElementById('canvasContainer').getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            const deltaX = mouseX - dragStart.x;
+            const deltaY = mouseY - dragStart.y;
+            
+            if (dragMode === 'move') {
+                scalePosition.x = Math.max(0, Math.min(canvas.width - scalePosition.width, scalePosition.x + deltaX));
+                scalePosition.y = Math.max(0, Math.min(canvas.height - 20, scalePosition.y + deltaY));
+            } else if (dragMode === 'resize-left') {
+                const newWidth = scalePosition.width - deltaX;
+                if (newWidth > 20) {
+                    scalePosition.x += deltaX;
+                    scalePosition.width = newWidth;
+                }
+            } else if (dragMode === 'resize-right') {
+                const newWidth = scalePosition.width + deltaX;
+                if (newWidth > 20 && scalePosition.x + newWidth <= canvas.width) {
+                    scalePosition.width = newWidth;
+                }
+            }
+            
+            dragStart.x = mouseX;
+            dragStart.y = mouseY;
+            
+            updateScaleDisplay();
+            updatePixelRatio();
+        }
+        
+        function stopDrag() {
+            isDragging = false;
+        }
+        
+        function updateScaleDisplay() {
+            const scaleLine = document.getElementById('scaleLine');
+            scaleLine.style.left = scalePosition.x + 'px';
+            scaleLine.style.top = scalePosition.y + 'px';
+            scaleLine.style.width = scalePosition.width + 'px';
+            
+            document.getElementById('scaleLength').textContent = scalePosition.width + ' pixels';
+            document.getElementById('scaleLabel').textContent = REFERENCE_MM + ' mm';
+        }
+        
+        function updateImageInfo() {
+            if (scaleImage) {
+                document.getElementById('imageSize').textContent = `${scaleImage.width} × ${scaleImage.height} pixels`;
+            }
+        }
+        
+        function updateCanvasInfo() {
+            document.getElementById('canvasSize').textContent = `${canvas.width} × ${canvas.height} pixels`;
+        }
+        
+        function updatePixelRatio() {
+            if (scalePosition.width > 0) {
+                const pixelsPerMM = scalePosition.width / REFERENCE_MM;
+                const mmPerPixel = REFERENCE_MM / scalePosition.width;
+                
+                document.getElementById('pixelRatio').textContent = 
+                    `${pixelsPerMM.toFixed(3)} pixels/mm (${mmPerPixel.toFixed(6)} mm/pixel)`;
+            }
+        }
+        
+        function setReferenceSize(size, name) {
+            REFERENCE_MM = size;
+            REFERENCE_NAME = name;
+            updateReferenceDisplay();
+            updateScaleDisplay();
+            updatePixelRatio();
+        }
+        
+        function setCustomReferenceSize() {
+            const customInput = document.getElementById('customSize');
+            const customSize = parseFloat(customInput.value);
+            
+            if (customSize && customSize > 0) {
+                REFERENCE_MM = customSize;
+                REFERENCE_NAME = 'Custom';
+                updateReferenceDisplay();
+                updateScaleDisplay();
+                updatePixelRatio();
+                customInput.value = '';
+            } else {
+                alert('Please enter a valid size greater than 0');
+            }
+        }
+        
+        function updateReferenceDisplay() {
+            document.getElementById('referenceLength').textContent = 
+                `${REFERENCE_MM} mm (${REFERENCE_NAME})`;
+        }
     </script>
 </body>
 </html>

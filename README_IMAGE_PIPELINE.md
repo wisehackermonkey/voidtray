@@ -119,6 +119,28 @@ still issues with scale but bettter
 # suppried it wasnt crazy off!
 ### 91.24mm vs the actual 85.6 mm!
 
+# turns out that was actually just dumb luck!
+
+# had to do alot of tweaking
+
+![1754018560247](image/README_IMAGE_PIPELINE/1754018560247.png)
+
+# this got the scale to the correct size.
+
+![1754018541570](image/README_IMAGE_PIPELINE/1754018541570.png)
+# 23.7257 mm vs 25.5 actual size 
+# which works out to 93% accurate! nice
+
+# turns out the small issue i had was images larger than the fixed canvas size. images larger we shunken down and it messed up the mm/pixel ratio
+
+![1754021792921](image/README_IMAGE_PIPELINE/1754021792921.png)
+# results
+![1754021812536](image/README_IMAGE_PIPELINE/1754021812536.png)
+0.993 % accurate
+
+# got a better interface. and combined the measuring scale
+
+![1754026003186](image/README_IMAGE_PIPELINE/1754026003186.png)
 # final inteface
 - Remove shadows (gamma)
 - Image Exposure (good for removing shadows)
