@@ -108,6 +108,17 @@ still issues with scale but bettter
 # added a kickass crop interface
 ![1753922470533](image/README_IMAGE_PIPELINE/1753922470533.png)
 
+# working on the ui for pixel to mm ratio
+
+# here's the v1
+![1754012580991](image/README_IMAGE_PIPELINE/1754012580991.png)
+
+# first try dimentional accuracy
+
+![1754013054858](image/README_IMAGE_PIPELINE/1754013054858.png)
+# suppried it wasnt crazy off!
+### 91.24mm vs the actual 85.6 mm!
+
 # final inteface
 - Remove shadows (gamma)
 - Image Exposure (good for removing shadows)

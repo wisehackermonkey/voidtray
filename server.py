@@ -156,7 +156,7 @@ def create_bitmask_and_contours(rgba_image):
 # Example usage:
 # rgba_image = Image.open("output/no_background.png")
 # binary_mask, contours = create_bitmask_and_contours(rgba_image)
-def convert_to_smoothed_vector(input_image, output_svg, canvas_size=(500, 500), 
+def convert_to_smoothed_vector(input_image, output_svg, canvas_size=(None, None), 
                              num_sampled_points=100, output_points=50, smoothing=1):
     """
     Convert an image to a smoothed vector SVG.
@@ -320,7 +320,7 @@ def save_intermediate_results(no_bg_img, binary_mask, output_dir='output'):
     return no_bg_path, mask_path
 
 def complete_image_to_vector_workflow(input_path, output_svg=None, output_dir='output',
-                                    canvas_size=(500, 500), num_sampled_points=50, 
+                                    canvas_size=(None, None), num_sampled_points=50, 
                                     output_points=40, smoothing=1, visualize=True,
                                     save_intermediates=True):
     """

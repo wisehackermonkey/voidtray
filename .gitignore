@@ -10,4 +10,5 @@ node_modules
 # Folder config file
 Desktop.ini
 static/test4.stl
+output/*
 output/test4.dxf
