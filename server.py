@@ -35,10 +35,7 @@ import svgwrite
 # stl_output_path = r"C:\Users\oran\github\voidtray\output\shape.stl"
 
 unit_size = 45  # mm grid cell size
-box_height = 90  # mm box height (30cm)
-extrude_height = box_height+5  # mm extrusion height upward
-extrude_start_z = 30  # mm extrusion start height
-bottom_layer_offset= 5
+
 
 # Assuming 96 DPI for your SVG
 svg_to_mm_scale = 25.4 / 96  # ~0.264583
@@ -431,7 +428,10 @@ def count_grid_cells_for_dxf(dxf_path, cell_size=45):
     return columns, rows, min_x, min_y, max_x, max_y
 
 
-def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0):
+def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0,box_height=0.0):
+    extrude_height = box_height+5  # mm extrusion height upward
+    extrude_start_z = 30  # mm extrusion start height
+    bottom_layer_offset = 5
 
     paths, _ = svg2paths(svg_path)
     doc = ezdxf.new(dxfversion='R2010')
@@ -512,6 +512,7 @@ def upload_file():
     data_url = request.form.get('croppedImage')
     mm_to_px_scale_ratio = request.form.get("mm_per_pixel")
     mm_to_px_scale_ratio = float(mm_to_px_scale_ratio)
+    box_height = float(request.form.get("box_height"))
     if data_url:
         header, encoded = data_url.split(",", 1)
         image_data = base64.b64decode(encoded)
@@ -550,7 +551,7 @@ def upload_file():
     )
 
     output_svg = os.path.join(OUTPUT_FOLDER, f"{base_name}")
-    stl_file_generator(f"{output_svg}_vector.svg",mm_to_px_scale_ratio)
+    stl_file_generator(f"{output_svg}_vector.svg",mm_to_px_scale_ratio,box_height)
 
     return render_template('index.html', download_url=url_for('static', filename="test4.stl"))
 if __name__ == '__main__':

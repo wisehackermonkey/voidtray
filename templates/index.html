@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image to STL Processor with Scale Measurer</title>
+    <title>Voidtray, Picture to custom gridfinity box generator</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
         body {
@@ -81,6 +81,29 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             width: 200px;
+        }
+        
+        .height-input-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .height-input-group input {
+            width: 80px;
+        }
+        
+        .height-input-group .units-input {
+            width: 60px;
+        }
+        
+        .gridfinity-note {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
         }
         
         button {
@@ -286,7 +309,7 @@
 <body>
     <!-- Image to STL Processor Section -->
     <div class="section">
-        <h1>Image to STL Processor</h1>
+        <h1>Voidtray, Picture to custom gridfinity box generator</h1>
 
         <div class="upload-section">
             <div class="file-input">
@@ -309,6 +332,20 @@
                 <label for="mmPerPixel">mm to pixel scale ratio:</label>
                 <input type="number" step="any" name="mm_per_pixel" id="mmPerPixel" placeholder="e.g., 0.264" required>
                 <button type="button" id="syncRatioBtn" class="sync-button" disabled>↑ Get from Scale Measurer Below</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="boxHeight">Box Height (mm):</label>
+                <div class="height-input-group">
+                    <input type="number" step="0.01" min="4.75" name="box_height" id="boxHeight" value="42" required>
+                    <span>mm</span>
+                    <span>|</span>
+                    <input type="number" min="1" step="1" id="heightUnits" class="units-input" value="6">
+                    <span>units (7mm each)</span>
+                </div>
+                <div class="gridfinity-note">
+                    Gridfinity standard: 7mm per unit, minimum 4.75mm
+                </div>
             </div>
             
             <button type="submit" id="uploadBtn" class="btn-primary" disabled>Click here to upload image</button>
@@ -351,22 +388,55 @@
             <h3>Reference Objects (Click to Use):</h3>
             <div class="reference-objects">
                 <div class="reference-item" onclick="setReferenceSize(85.6, 'Credit Card')">
-                    <strong>Credit Card:</strong> 85.6 mm
+                    <strong>Credit Card:</strong> 85.6 mm 
                 </div>
-                <div class="reference-item" onclick="setReferenceSize(89, 'US Business Card')">
-                    <strong>US Business Card:</strong> 89 mm
+                <div class="reference-item" onclick="setReferenceSize(88.9, 'US Business Card')">
+                    <strong>US Business Card:</strong> 88.9 mm
                 </div>
                 <div class="reference-item" onclick="setReferenceSize(24.26, 'US Quarter')">
                     <strong>US Quarter:</strong> 24.26 mm
                 </div>
-                <div class="reference-item" onclick="setReferenceSize(156, 'US $1 Bill')">
-                    <strong>US $1 Bill:</strong> 156 mm
+                <div class="reference-item" onclick="setReferenceSize(155.956, 'US $1 Bill')">
+                    <strong>US $1 Bill:</strong> 155.956 mm
                 </div>
-                <div class="reference-item" onclick="setReferenceSize(20, 'Mexican $5 MXN')">
-                    <strong>Mexican $5 MXN:</strong> 20 mm
+                <div class="reference-item" onclick="setReferenceSize(25.5, 'Mexican $5 MXN')">
+                    <strong>Mexican $5 MXN:</strong> 25.5 mm
                 </div>
-                <div class="reference-item" onclick="setReferenceSize(23, 'Mexican $10 MXN')">
-                    <strong>Mexican $10 MXN:</strong> 23 mm
+                <div class="reference-item" onclick="setReferenceSize(28, 'Mexican $10 MXN')">
+                    <strong>Mexican $10 MXN:</strong> 28 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(14.5, 'AA Battery')">
+                    <strong>AA Battery:</strong> 14.5 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(10.5, 'AAA Battery')">
+                    <strong>AAA Battery:</strong> 10.5 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(19.05, 'US Penny')">
+                    <strong>US Penny:</strong> 19.05 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(17.91, 'US Dime')">
+                    <strong>US Dime:</strong> 17.91 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(24.26, 'US Quarter')">
+                    <strong>US Quarter:</strong> 24.26 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(23.25, '€1 Coin')">
+                    <strong>€1 Coin:</strong> 23.25 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(23.03, '£1 Coin')">
+                    <strong>£1 Coin:</strong> 23.03 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(22.6, '¥100 Coin')">
+                    <strong>¥100 Coin:</strong> 22.6 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(20, '₹1 Coin')">
+                    <strong>₹1 Coin:</strong> 20 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(23, '₹5 Coin')">
+                    <strong>₹5 Coin:</strong> 23 mm
+                </div>
+                <div class="reference-item" onclick="setReferenceSize(76.2, 'Post-it Note (Standard)')">
+                    <strong>Post-it Note (Standard):</strong> 76.2 mm
                 </div>
             </div>
             <div class="custom-input-section">
@@ -412,6 +482,10 @@
         const mmPerPixelInput = document.getElementById('mmPerPixel');
         const syncRatioBtn = document.getElementById('syncRatioBtn');
         const useAboveImageBtn = document.getElementById('useAboveImageBtn');
+        
+        // Box height elements
+        const boxHeightInput = document.getElementById('boxHeight');
+        const heightUnitsInput = document.getElementById('heightUnits');
 
         let cropper;
         let cropperImageData = null; // Store the cropped image data
@@ -425,6 +499,26 @@
         
         let REFERENCE_MM = 85.6;
         let REFERENCE_NAME = 'Credit Card';
+
+        // Box height functionality
+        function updateBoxHeightFromUnits() {
+            const units = parseInt(heightUnitsInput.value) || 1;
+            const height = Math.max(4.75, units * 7); // Ensure minimum 4.75mm
+            boxHeightInput.value = height;
+        }
+
+        function updateUnitsFromBoxHeight() {
+            const height = parseFloat(boxHeightInput.value) || 4.75;
+            const units = Math.max(1, Math.round(height / 7));
+            heightUnitsInput.value = units;
+            // Update box height to match rounded units
+            const adjustedHeight = Math.max(4.75, units * 7);
+            boxHeightInput.value = adjustedHeight;
+        }
+
+        // Event listeners for box height
+        heightUnitsInput.addEventListener('input', updateBoxHeightFromUnits);
+        boxHeightInput.addEventListener('change', updateUnitsFromBoxHeight);
 
         // Initialize Scale Measurer
         document.addEventListener('DOMContentLoaded', function() {
