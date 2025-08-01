@@ -48,6 +48,7 @@ import os
 from flask import Flask, render_template, request, redirect, send_from_directory, url_for
 from PIL import Image
 from werkzeug.utils import secure_filename
+import base64
  
 UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'output'
@@ -58,6 +59,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['OUTPUT_FOLDER'] = OUTPUT_FOLDER
 app.config['STATIC_FOLDER'] = STATIC_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 16 MB
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
@@ -500,43 +502,48 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    file = request.files['file']
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
+    # Check if croppedImage (base64) is provided
+    data_url = request.form.get('croppedImage')
+    if data_url:
+        header, encoded = data_url.split(",", 1)
+        image_data = base64.b64decode(encoded)
+        image = Image.open(io.BytesIO(image_data))
+
+        filename = "cropped_upload.png"
         input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(input_path)
+        image.save(input_path)
+    else:
+        # Fallback to standard file upload
+        file = request.files.get('file')
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(input_path)
+        else:
+            return redirect('/')
 
-        # Run your processing code
-        base_name = os.path.splitext(os.path.basename(input_path))[0]
-        dxf_path = os.path.join(OUTPUT_FOLDER, f"test4.dxf")
-        stl_output_path = os.path.join(OUTPUT_FOLDER, f"test4.stl")
+    # === Run STL generation workflow ===
+    base_name = os.path.splitext(os.path.basename(input_path))[0]
+    dxf_path = os.path.join(OUTPUT_FOLDER, f"test4.dxf")
+    stl_output_path = os.path.join(OUTPUT_FOLDER, f"test4.stl")
 
-        with Image.open(input_path) as img:
-            canvas_size = img.size
+    with Image.open(input_path) as img:
+        canvas_size = img.size
 
-        results = complete_image_to_vector_workflow(
-            input_path=input_path,
-            output_dir=OUTPUT_FOLDER,
-            canvas_size=canvas_size,
-            num_sampled_points=50,
-            output_points=40,
-            smoothing=1,
-            visualize=False,
-            save_intermediates=True
-        )
+    results = complete_image_to_vector_workflow(
+        input_path=input_path,
+        output_dir=OUTPUT_FOLDER,
+        canvas_size=canvas_size,
+        num_sampled_points=50,
+        output_points=40,
+        smoothing=1,
+        visualize=False,
+        save_intermediates=True
+    )
 
-        output_svg = os.path.join(OUTPUT_FOLDER, f"{base_name}")
-        stl_file_generator(f"{output_svg}_vector.svg")
+    output_svg = os.path.join(OUTPUT_FOLDER, f"{base_name}")
+    stl_file_generator(f"{output_svg}_vector.svg")
 
-        # Move SVG to static for download
-        # stl_filename = f"{base_name}_model.stl"
-        # final_stl_path = os.path.join(STATIC_FOLDER, stl_filename)
-        # shutil.copy(f"{output_svg}.stl", final_stl_path)
-        # output\test11.stl
-        # static\test3_vector.svg
-        return render_template('index.html', download_url=url_for('static', filename=f"test4.stl"))
-
-    return redirect('/')
-
+    return render_template('index.html', download_url=url_for('static', filename="test4.stl"))
 if __name__ == '__main__':
     app.run(debug=True)

@@ -3,20 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <title>Image to STL Processor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
         .hidden { display: none; }
         #spinner { display: none; margin-top: 10px; }
+        #preview-container { margin-top: 20px; }
+        #imagePreview { max-width: 500px; max-height: 500px; }
     </style>
 </head>
 <body>
     <h1>Upload Image to Convert</h1>
 
+    <!-- File input (not in form) -->
+    <input type="file" id="fileInput" accept="image/*" required><br><br>
+
+    <!-- Image Preview -->
+    <div id="preview-container" class="hidden">
+        <img id="imagePreview" src="" alt="Image Preview">
+        <br><br>
+        <button id="cropBtn">Click here to crop</button>
+    </div>
+
+    <!-- Form to upload cropped image -->
     <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" required><br><br>
-        <button type="submit" id="uploadBtn">Click here to upload image</button>
+        <input type="hidden" name="croppedImage" id="croppedImageInput">
+        <br>
+        <button type="submit" id="uploadBtn" disabled>Click here to upload image</button>
     </form>
 
+    <!-- Spinner -->
     <div id="spinner">
         <p>Processing... <img src="https://i.gifer.com/ZZ5H.gif" width="32"/></p>
     </div>
@@ -28,12 +44,59 @@
     </a>
     {% endif %}
 
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewContainer = document.getElementById('preview-container');
+        const cropBtn = document.getElementById('cropBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const croppedImageInput = document.getElementById('croppedImageInput');
         const form = document.getElementById('uploadForm');
         const spinner = document.getElementById('spinner');
-        const uploadBtn = document.getElementById('uploadBtn');
 
-        form.addEventListener('submit', function() {
+        let cropper;
+
+        fileInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                imagePreview.src = e.target.result;
+                previewContainer.classList.remove('hidden');
+
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(imagePreview, {
+                    aspectRatio: NaN,
+                    viewMode: 1
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+
+        cropBtn.addEventListener('click', function () {
+            if (!cropper) return;
+
+            const canvas = cropper.getCroppedCanvas({
+                width: 500,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high',
+            });
+
+            // Convert canvas to base64 PNG
+            canvas.toBlob(function (blob) {
+                const reader = new FileReader();
+                reader.onloadend = function () {
+                    croppedImageInput.value = reader.result;
+                    uploadBtn.disabled = false;
+                };
+                reader.readAsDataURL(blob);
+            }, 'image/png');
+        });
+
+        form.addEventListener('submit', function () {
             spinner.style.display = 'block';
             uploadBtn.disabled = true;
             uploadBtn.textContent = "Uploading...";

@@ -101,7 +101,13 @@ still issues with scale but bettter
 ![1753918886650](image/README_IMAGE_PIPELINE/1753918886650.png)
 
 # web ui
-![1753919507683](image/README_IMAGE_PIPELINE/1753919507683.png)![1753919508253](image/README_IMAGE_PIPELINE/1753919508253.png)
+![1753919507683](image/README_IMAGE_PIPELINE/1753919507683.png)
+
+![1753919508253](image/README_IMAGE_PIPELINE/1753919508253.png)
+
+# added a kickass crop interface
+![1753922470533](image/README_IMAGE_PIPELINE/1753922470533.png)
+
 # final inteface
 - Remove shadows (gamma)
 - Image Exposure (good for removing shadows)
