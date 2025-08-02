@@ -148,12 +148,18 @@ still issues with scale but bettter
 # Got the Gridfinity library working!
 ![1754111234755](image/README_IMAGE_PIPELINE/1754111234755.png)
 ![1754111249230](image/README_IMAGE_PIPELINE/1754111249230.png)
+# arduino case in 30 seconds
+![1754112053672](image/README_IMAGE_PIPELINE/1754112053672.png)
 
+https://github.com/michaelgale/cq-gridfinity?tab=readme-ov-file#gridfinitybox-1
+https://github.com/michaelgale/cq-kit
 # improvements:
 - stl:increase bottom thickness,
 - stl:add outside buffer
 - click button for toggle horizontal or virtical messurament of pixel to mm
 - auto update pixel to mm 
+- add download of inside part only
+- bug: issue with scaling. when i use big size, the scaling is way off. when cropped its more reasonable
 # final inteface
 - Remove shadows (gamma)
 - Image Exposure (good for removing shadows)

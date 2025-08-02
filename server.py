@@ -429,9 +429,12 @@ def count_grid_cells_for_dxf(dxf_path, cell_size=45):
 
 # TODO add extrude hight, extrude start, extruded offset
 def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0,box_height=0.0):
-    extrude_height = box_height+5  # mm extrusion height upward
-    extrude_start_z = 30  # mm extrusion start height
-    bottom_layer_offset = 5
+   
+    unit_size = 45  # mm grid cell size
+    units = 6 # 
+    box_height = 7*units  # 7mm per box units height source https://gridfinity.xyz/specification/
+    bottom_layer_offset= 4.5+5 #4.5 is the base of the gridfinity, 5 is the bottom wall
+
 
     paths, _ = svg2paths(svg_path)
     doc = ezdxf.new(dxfversion='R2010')
@@ -452,10 +455,7 @@ def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0,box_height=0.0):
     columns, rows, min_x, min_y, max_x, max_y = count_grid_cells_for_dxf(dxf_path, cell_size=unit_size)
     print(f"Grid size: {columns} columns x {rows} rows")
 
-    # ==== Step 3: Create grid box solid ====
-    grid_width = columns * unit_size
-    grid_height = rows * unit_size
-
+    
     
     
 
@@ -464,7 +464,7 @@ def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0,box_height=0.0):
         cq.importers.importDXF(dxf_path)
         .wires()
         .toPending()
-        .extrude(extrude_height)
+        .extrude(box_height)
     )
 
 
@@ -476,7 +476,6 @@ def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0,box_height=0.0):
     # ==== Step 5: Intersect box and extruded DXF shape ====
     box = GridfinityBox(columns, rows, 5, solid=True, solid_ratio=0.8, verbose=True)
     r = box.render()
-    #r = r.translate((-grid_width/2, -grid_height/2, 0))
     result = r.cut(dxf_shape)
 
     # ==== Step 6: Export STL ====
