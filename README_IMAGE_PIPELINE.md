@@ -145,6 +145,15 @@ still issues with scale but bettter
 # got the STL viewer working!
 ![1754032717872](image/README_IMAGE_PIPELINE/1754032717872.png)
 
+# Got the Gridfinity library working!
+![1754111234755](image/README_IMAGE_PIPELINE/1754111234755.png)
+![1754111249230](image/README_IMAGE_PIPELINE/1754111249230.png)
+
+# improvements:
+- stl:increase bottom thickness,
+- stl:add outside buffer
+- click button for toggle horizontal or virtical messurament of pixel to mm
+- auto update pixel to mm 
 # final inteface
 - Remove shadows (gamma)
 - Image Exposure (good for removing shadows)

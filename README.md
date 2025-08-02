@@ -32,9 +32,9 @@ conda create python=3.10 voidtray
 conda create -n voidtray python=3.10
 conda activate voidtray
 
-pip3 install "rembg[cpu,cli]" cadquery numpy vtracer ezdxf Flask svgpathtools  matplotlib svgwrite pillow scikit-image
+pip3 install "rembg[cpu,cli]" cadquery numpy vtracer ezdxf Flask svgpathtools  matplotlib svgwrite pillow scikit-image cqgridfinity cqkit
 pip3 install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 server:server
+gunicorn -w 4 -b 0.0.0.0:5000 server:app
 
 conda install -c conda-forge scikit-image -y
 python -c "import skimage; print(skimage.__version__)"

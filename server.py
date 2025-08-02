@@ -9,7 +9,7 @@ from svgpathtools import svg2paths
 import os
 import cadquery as cq
 import math
-import shutil
+from cqgridfinity import *
 
 # Image handling
 from PIL import Image
@@ -427,7 +427,7 @@ def count_grid_cells_for_dxf(dxf_path, cell_size=45):
 
     return columns, rows, min_x, min_y, max_x, max_y
 
-
+# TODO add extrude hight, extrude start, extruded offset
 def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0,box_height=0.0):
     extrude_height = box_height+5  # mm extrusion height upward
     extrude_start_z = 30  # mm extrusion start height
@@ -456,22 +456,8 @@ def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0,box_height=0.0):
     grid_width = columns * unit_size
     grid_height = rows * unit_size
 
-    box = cq.Workplane("XY")
-
-    for col in range(columns):
-        for row in range(rows):
-            box = box.union(
-                cq.Workplane("XY")
-                .box(unit_size, unit_size, box_height)
-                .translate((
-                    col * unit_size + unit_size / 2,
-                    row * unit_size + unit_size / 2,
-                    box_height / 2
-                ))
-            )
-
-    # Center the box grid on XY=0
-    box = box.translate((-grid_width/2, -grid_height/2, 0))
+    
+    
 
     # ==== Step 4: Import DXF, extrude upward, translate to center, offset Z by 5mm ====
     dxf_shape = (
@@ -486,9 +472,12 @@ def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0,box_height=0.0):
     center_y = (min_y + max_y) / 2
 
     dxf_shape = dxf_shape.translate((-center_x, -center_y, bottom_layer_offset))
-
+    # Center the box grid on XY=0
     # ==== Step 5: Intersect box and extruded DXF shape ====
-    result = box.cut(dxf_shape)
+    box = GridfinityBox(columns, rows, 5, solid=True, solid_ratio=0.8, verbose=True)
+    r = box.render()
+    #r = r.translate((-grid_width/2, -grid_height/2, 0))
+    result = r.cut(dxf_shape)
 
     # ==== Step 6: Export STL ====
     cq.exporters.export(result, stl_output_path)
