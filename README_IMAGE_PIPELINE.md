@@ -160,6 +160,7 @@ https://github.com/michaelgale/cq-kit
 - auto update pixel to mm 
 - add download of inside part only
 - bug: issue with scaling. when i use big size, the scaling is way off. when cropped its more reasonable
+- idea: make step file a paid addon.
 # final inteface
 - Remove shadows (gamma)
 - Image Exposure (good for removing shadows)
