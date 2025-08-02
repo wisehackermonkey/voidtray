@@ -12,3 +12,4 @@ Desktop.ini
 static/*
 output/*
 uploads/*
+__pycache__/server.cpython-312.pyc
