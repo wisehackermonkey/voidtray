@@ -531,8 +531,8 @@ def upload_file():
         input_path=input_path,
         output_dir=OUTPUT_FOLDER,
         canvas_size=canvas_size,
-        num_sampled_points=50,
-        output_points=40,
+        num_sampled_points=100,
+        output_points=50,
         smoothing=1,
         visualize=False,
         save_intermediates=True
