@@ -34,7 +34,11 @@ conda activate voidtray
 
 pip3 install "rembg[cpu,cli]" cadquery numpy vtracer ezdxf Flask svgpathtools  matplotlib svgwrite pillow scikit-image cqgridfinity cqkit
 pip3 install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 server:app
+waitress-serve --host=0.0.0.0 --port=80 server:app
+gunicorn -w 4 -b 0.0.0.0:80 server:app
+
+pip install waitress
+
 
 conda install -c conda-forge scikit-image -y
 python -c "import skimage; print(skimage.__version__)"
