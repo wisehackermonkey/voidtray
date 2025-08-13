@@ -51,6 +51,53 @@ conda install -c conda-forge jupyterlab -y
 jupyter lab
 ```
 
+
+
+```
+sudo nano /etc/systemd/system/voidtray.service
+
+[Unit]
+Description=VoidTray Flask Application
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/github/voidtray
+Environment=PATH=/home/anaconda/anaconda3/envs/voidtray/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/home/anaconda/anaconda3/envs/voidtray/bin/waitress-serve --host=0.0.0.0 --port=80 server:app
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+# Reload systemd configuration
+sudo systemctl daemon-reload
+
+# Enable service to start on boot
+sudo systemctl enable voidtray.service
+
+# Start the service now
+sudo systemctl start voidtray.service
+
+# Check if it's running
+sudo systemctl status voidtray.service
+sudo journalctl -u voidtray.service -f
+
+
+
+# Stop and start to test auto-restart
+sudo systemctl stop voidtray.service
+sudo systemctl start voidtray.service
+
+# Or restart
+sudo systemctl restart voidtray.service
+```
 ```
 conda activate voidtray
 cd github/voidtray
@@ -405,3 +452,43 @@ oranbusiness@gmail.com
 ```
 
 #### [More of my Projects](https://github.com/wisehackermonkey/)
+
+How to create a customized systemd so the server is built proof using a prompt
+
+# colect this information first
+### run the following code within your server
+```
+pwd;conda info --envs;which python
+```
+# copy the code to the following prompt:
+```bash
+act as a linux admin: 
+
+create systemd file for my flask python server using waitresss
+
+main file: <NAME_OF_YOURMAIN_FILE>.py
+heres info about my system: 
+output of the following commands in my project dir
+
+```
+pwd;conda info --envs;which python
+```
+
+output:
+
+```
+<COMMAND_OUTPUT_HERE>
+```
+
+
+create a systemd file
+and simple and short instructions on how to setup
+use nano as the editor
+```
+
+# create a systemd file
+### note
+```
+sudo nano /etc/systemd/system/voidtray.service
+``` 
+# copy the output to this 

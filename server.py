@@ -1,4 +1,5 @@
 
+from waitress import serve
 # Complete Image to Vector Workflow
 # Background removal
 from rembg import remove
@@ -543,4 +544,6 @@ def upload_file():
 
     return render_template('index.html', download_url=url_for('static', filename="test4.stl"))
 if __name__ == '__main__':
-    app.run(debug=True)
+    print("void server started")
+    port = int(os.environ.get("PORT", 80))
+    serve(app, host="0.0.0.0", port=port)
