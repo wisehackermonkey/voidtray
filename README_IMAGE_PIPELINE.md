@@ -153,6 +153,24 @@ still issues with scale but bettter
 
 https://github.com/michaelgale/cq-gridfinity?tab=readme-ov-file#gridfinitybox-1
 https://github.com/michaelgale/cq-kit
+
+
+
+# combined thumb hole circle generator (NEW), and the crop tool, and the scale measure into unifed UI 
+![alt text](image-34.png)
+
+# one cool bonus feature is that it solves the scaling issue
+and i can have the scale line be outside of the crop aria! which was a really hard problem!
+![alt text](image-35.png)
+# working thumb holes
+![alt text](image-36.png)
+# got the combined output to work
+![alt text](image-37.png)
+farily accurate
+![alt text](image-38.png)
+# integration succesful!
+feels way more polished!
+![alt text](image-39.png)
 # improvements:
 - stl:increase bottom thickness,
 - stl:add outside buffer
@@ -167,3 +185,10 @@ https://github.com/michaelgale/cq-kit
 - contrast (sometimes helpful)
 - reset to original
 - "Process image", "Save locally"
+
+
+make flow better 
+- crop (locked)
+- measure (locked)
+- optional (thumb screws) (lock unlock)
+- click crop (unlocked when mesure is complee) 
