@@ -398,35 +398,40 @@ def complete_image_to_vector_workflow(input_path, output_svg=None, output_dir='o
 
 # ==== Step 2: Count grid size based on DXF bounding box ====
 def count_grid_cells_for_dxf(dxf_path, cell_size=45):
-    doc = ezdxf.readfile(dxf_path)
-    msp = doc.modelspace()
-    units = doc.header.get('$INSUNITS', 0)
-    print(f"INSUNITS value: {units}")
-    points = []
-    for entity in msp:
-        if entity.dxftype() == 'LWPOLYLINE':
-            points.extend([(point[0], point[1]) for point in entity.get_points()])
-        elif entity.dxftype() == 'LINE':
-            points.append((entity.dxf.start.x, entity.dxf.start.y))
-            points.append((entity.dxf.end.x, entity.dxf.end.y))
+   doc = ezdxf.readfile(dxf_path)
+   msp = doc.modelspace()
+   units = doc.header.get('$INSUNITS', 0)
+   print(f"INSUNITS value: {units}")
+   points = []
+   for entity in msp:
+       if entity.dxftype() == 'LWPOLYLINE':
+           points.extend([(point[0], point[1]) for point in entity.get_points()])
+       elif entity.dxftype() == 'LINE':
+           points.append((entity.dxf.start.x, entity.dxf.start.y))
+           points.append((entity.dxf.end.x, entity.dxf.end.y))
 
-    if not points:
-        raise ValueError("No path points found in the DXF file.")
+   if not points:
+       raise ValueError("No path points found in the DXF file.")
 
-    xs, ys = zip(*points)
-    min_x, max_x = min(xs), max(xs)
-    min_y, max_y = min(ys), max(ys)
+   xs, ys = zip(*points)
+   min_x, max_x = min(xs), max(xs)
+   min_y, max_y = min(ys), max(ys)
 
-    width = max_x - min_x
-    height = max_y - min_y
+   offset = 10
+   min_x -= offset
+   min_y -= offset
+   max_x += offset
+   max_y += offset
 
-    # INSUNITS=6 means mm, no conversion needed
-    print(f"Bounding box (mm): width={width:.2f}, height={height:.2f}")
+   width = max_x - min_x
+   height = max_y - min_y
 
-    columns = math.ceil(width / cell_size)
-    rows = math.ceil(height / cell_size)
+   print(f"Bounding box (mm): width={width:.2f}, height={height:.2f}")
 
-    return columns, rows, min_x, min_y, max_x, max_y
+   columns = math.ceil(width / cell_size)
+   rows = math.ceil(height / cell_size)
+
+   return columns, rows, min_x, min_y, max_x, max_y
 
 # TODO add extrude hight, extrude start, extruded offset
 def stl_file_generator(svg_path,mm_to_px_scale_ratio=0.0,box_height=0.0):

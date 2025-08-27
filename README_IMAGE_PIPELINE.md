@@ -171,6 +171,9 @@ farily accurate
 # integration succesful!
 feels way more polished!
 ![alt text](image-39.png)
+# got the offset to work properly!
+# 1% was way too small
+![alt text](image-40.png)
 # improvements:
 - stl:increase bottom thickness,
 - stl:add outside buffer
