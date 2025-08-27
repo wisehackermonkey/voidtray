@@ -3,556 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voidtray, Picture to custom gridfinity box generator</title>
+    <title>Voidtray - Picture to Gridfinity Box Generator</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .hidden { display: none; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        input { padding: 5px; margin: 5px; }
+        .section { background: white; padding: 20px; margin-bottom: 20px; border: 1px solid #ddd; }
         
-        .section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .hidden { 
-            display: none; 
-        }
-        
-        .upload-section {
-            text-align: center;
-        }
-        
-        .file-input {
-            margin: 10px 0;
-            padding: 10px;
-            border: 2px dashed #ddd;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: border-color 0.3s;
-        }
-        
-        .file-input:hover {
-            border-color: #007bff;
-        }
-        
-        input[type="file"] {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        #preview-container { 
-            margin-top: 20px; 
-            text-align: center;
-        }
-        
-        #imagePreview { 
-            max-width: 500px; 
-            max-height: 500px; 
-        }
-        
-        #spinner { 
-            display: none; 
-            margin-top: 10px; 
-            text-align: center;
-        }
-        
-        .form-group {
-            margin: 15px 0;
-            text-align: center;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        .form-group input {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 200px;
-        }
-        
-        .height-input-group {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .height-input-group input {
-            width: 80px;
-        }
-        
-        .height-input-group .units-input {
-            width: 60px;
-        }
-        
-        .gridfinity-note {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-            font-style: italic;
-        }
-        
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #0056b3;
-        }
-        
-        .btn-primary:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #218838;
-        }
-        
-        /* Scale Measurer Styles */
-        .canvas-container {
+        /* Canvas overlay styles */
+        .canvas-wrapper {
             position: relative;
             display: inline-block;
-            border: 2px solid #ddd;
             margin: 20px 0;
         }
         
-        #imageCanvas {
-            display: block;
+        #drawingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             cursor: crosshair;
+            pointer-events: auto;
+            z-index: 10;
         }
         
-        .scale-line {
+        .circle-handle {
             position: absolute;
-            height: 3px;
-            background: #ff0000;
-            cursor: move;
-            user-select: none;
-            box-shadow: 0 0 4px rgba(0,0,0,0.5);
-        }
-        
-        .scale-handle {
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: #ff0000;
-            border: 2px solid white;
-            border-radius: 50%;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border: 2px solid #000;
             cursor: grab;
-            top: -6px;
-            box-shadow: 0 0 4px rgba(0,0,0,0.5);
-            opacity: 0.5;
+            transform: translate(-50%, -50%);
+            z-index: 15;
         }
         
-        .scale-handle:active {
+        .circle-handle:active {
             cursor: grabbing;
         }
         
-        .scale-handle.left {
-            left: -6px;
-        }
-        
-        .scale-handle.right {
-            right: -6px;
-        }
-        
-        .scale-label {
+        .crop-outline {
             position: absolute;
-            background: rgba(255, 0, 0, 0.8);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 12px;
-            font-weight: bold;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            white-space: nowrap;
+            border: 3px solid red;
+            pointer-events: none;
+            z-index: 20;
         }
-        
-        .reference-section {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 20px 0;
-            border: 1px solid #dee2e6;
-        }
-        
-        .reference-objects {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .reference-item {
-            background: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .reference-item:hover {
-            background-color: #e9ecef;
-        }
-        
-        .reference-item strong {
-            color: #007bff;
-        }
-        
-        .custom-input-section {
-            background: white;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            margin-top: 10px;
-        }
-        
-        .custom-input-section input {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 100px;
-            margin: 0 10px;
-        }
-        
-        .custom-input-section button {
-            padding: 8px 16px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .custom-input-section button:hover {
-            background: #0056b3;
-        }
-        
-        .info-panel {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 20px;
-        }
-        
-        .info-item {
-            margin: 5px 0;
-            font-weight: bold;
-        }
-        
-        .ratio-display {
-            font-size: 18px;
-            color: #007bff;
-            background: white;
-            padding: 10px;
-            border-radius: 4px;
-            border: 2px solid #007bff;
-            margin-top: 10px;
-        }
-        
-        .instructions {
-            background: #e7f3ff;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            border-left: 4px solid #007bff;
-        }
-        
-        .sync-button {
-            background: #28a745;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        
-        .sync-button:hover {
-            background: #218838;
-        }
-
-
-        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
-        #container { width: 500px; height: 500px; position: relative; margin: 0 auto; }
-        #loadButton { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-        padding: 15px 30px; background: #4CAF50; color: white; border: none; 
-        border-radius: 5px; cursor: pointer; z-index: 100; }
-        #loadButton:hover { background: #45a049; }
-        #loadButton.hidden { display: none; }
-        #info { position: absolute; top: 20px; left: 20px; color: white; font-size: 14px; z-index: 100; }
-
     </style>
 </head>
 <body>
-    <!-- Image to STL Processor Section -->
     <div class="section">
-        <h1>Voidtray, Picture to custom gridfinity box generator</h1>
+        <h1>Voidtray - Picture to Gridfinity Box Generator</h1>
 
-        <div class="upload-section">
-            <div class="file-input">
-                <input type="file" id="fileInput" accept="image/*" required>
-            </div>
+        <div>
+            <input type="file" id="fileInput" accept="image/*" required>
         </div>
 
-        <!-- Image Preview -->
+        <!-- Image Preview with Canvas Overlay -->
         <div id="preview-container" class="hidden">
-            <img id="imagePreview" src="" alt="Image Preview">
-            <br><br>
-            <button id="cropBtn" class="btn-primary">Click here to crop</button>
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <img id="imagePreview" src="" alt="Image Preview" style="max-width: 500px;">
+                <canvas id="drawingCanvas"></canvas>
+            </div>
+            <br>
+            <button id="cropBtn">Crop Image</button>
+            <button id="measureBtn">Measure Reference Object</button>
+            <button id="addCircleBtn">Add Circle</button>
+            <button id="clearCirclesBtn">Clear All Circles</button>
+            <button id="showOutputBtn">Show Output</button>
+            <button id="downloadBtn" class="hidden">Download Combined Image</button>
         </div>
 
-        <!-- Form to upload cropped image -->
+        <!-- Form -->
         <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
             <input type="hidden" name="croppedImage" id="croppedImageInput">
+            <input type="hidden" name="mm_per_pixel" id="mmPerPixelInput">
             
-            <div class="form-group">
-                <label for="mmPerPixel">mm to pixel scale ratio:</label>
-                <input type="number" step="any" name="mm_per_pixel" id="mmPerPixel" placeholder="e.g., 0.264" required>
-                <button type="button" id="syncRatioBtn" class="sync-button" disabled>↑ Get from Scale Measurer Below</button>
+            <div>
+                <label>Box Height (mm):</label>
+                <input type="number" step="0.01" min="4.75" name="box_height" id="boxHeight" value="42" required>
             </div>
             
-            <div class="form-group">
-                <label for="boxHeight">Box Height (mm):</label>
-                <div class="height-input-group">
-                    <input type="number" step="0.01" min="4.75" name="box_height" id="boxHeight" value="42" required>
-                    <span>mm</span>
-                    <span>|</span>
-                    <input type="number" min="1" step="1" id="heightUnits" class="units-input" value="6">
-                    <span>units (7mm each)</span>
-                </div>
-                <div class="gridfinity-note">
-                    Gridfinity standard: 7mm per unit, minimum 4.75mm
-                </div>
+            <div id="ratioDisplay" style="margin: 10px 0; padding: 10px; background: #f0f0f0; display: none;">
+                <strong>Current Scale Ratio: </strong><span id="ratioValue">Not set</span> mm/px
             </div>
             
-            <button type="submit" id="uploadBtn" class="btn-primary" disabled>Click here to upload image</button>
+            <button type="submit" id="uploadBtn" disabled>Upload Image</button>
+            <button type="button" id="viewSTLBtn" class="hidden">View STL</button>
         </form>
 
-        <!-- Spinner -->
-        <div id="spinner">
-            <p>Processing... <img src="https://i.gifer.com/ZZ5H.gif" width="32"/></p>
+        <!-- Output Preview Section -->
+        <div id="output-container" class="hidden">
+            <h3>Combined Output</h3>
+            <canvas id="outputCanvas" style="border: 1px solid #ddd; max-width: 100%;"></canvas>
         </div>
 
-        <a href="/">  <button class="btn-success">Reset</button></a>
-        {% if download_url %}
-        <br><br>
-        <a href="{{ download_url }}" download>
-            <button class="btn-success">Click here to download STL</button>
-        </a>
-        <div id="container">
-        <button id="loadButton">Load STL Model</button>
-        <div id="info">Mouse: rotate | Wheel: zoom</div>
-    </div>
-        {% endif %}
-
-    </div>
-
-
-    <!-- Scale Measurer Section -->
-    <div class="section">
-        <h1>Image Scale Measurer</h1>
-        
-        <div class="canvas-container" id="canvasContainer" style="display: none;">
-            <canvas id="imageCanvas"></canvas>
-            <div class="scale-line" id="scaleLine">
-                <div class="scale-handle left" id="leftHandle"></div>
-                <div class="scale-handle right" id="rightHandle"></div>
-                <div class="scale-label" id="scaleLabel">85.6 mm</div>
+        <!-- STL Viewer Section -->
+        <div id="stl-viewer-container" class="hidden">
+            <h3>STL Viewer</h3>
+            <div id="stl-container" style="width: 500px; height: 500px; position: relative; margin: 20px auto; border: 1px solid #ddd;">
+                <button id="loadSTLButton" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                         padding: 15px 30px; background: #4CAF50; color: white; border: none; 
+                         border-radius: 5px; cursor: pointer; z-index: 100;">Load STL</button>
             </div>
-        </div>
-        
-        <div class="upload-section">
-            <div class="file-input">
-                <input type="file" id="scaleImageUpload" accept="image/*">
-                <button type="button" id="useAboveImageBtn" class="btn-primary" disabled>Use Image from Above</button>
-            </div>
-        </div>
-        
-        <div class="reference-section">
-            <h3>Reference Objects (Click to Use):</h3>
-            <div class="reference-objects">
-                <div class="reference-item" onclick="setReferenceSize(85.6, 'Credit Card')">
-                    <strong>Credit Card:</strong> 85.6 mm 
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(88.9, 'US Business Card')">
-                    <strong>US Business Card:</strong> 88.9 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(24.26, 'US Quarter')">
-                    <strong>US Quarter:</strong> 24.26 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(155.956, 'US $1 Bill')">
-                    <strong>US $1 Bill:</strong> 155.956 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(25.5, 'Mexican $5 MXN')">
-                    <strong>Mexican $5 MXN:</strong> 25.5 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(28, 'Mexican $10 MXN')">
-                    <strong>Mexican $10 MXN:</strong> 28 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(14.5, 'AA Battery')">
-                    <strong>AA Battery:</strong> 14.5 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(10.5, 'AAA Battery')">
-                    <strong>AAA Battery:</strong> 10.5 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(19.05, 'US Penny')">
-                    <strong>US Penny:</strong> 19.05 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(17.91, 'US Dime')">
-                    <strong>US Dime:</strong> 17.91 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(24.26, 'US Quarter')">
-                    <strong>US Quarter:</strong> 24.26 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(23.25, '€1 Coin')">
-                    <strong>€1 Coin:</strong> 23.25 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(23.03, '£1 Coin')">
-                    <strong>£1 Coin:</strong> 23.03 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(22.6, '¥100 Coin')">
-                    <strong>¥100 Coin:</strong> 22.6 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(20, '₹1 Coin')">
-                    <strong>₹1 Coin:</strong> 20 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(23, '₹5 Coin')">
-                    <strong>₹5 Coin:</strong> 23 mm
-                </div>
-                <div class="reference-item" onclick="setReferenceSize(76, 'Post-it Note (Standard)')">
-                    <strong>Post-it Note (Standard):</strong> 76.2 mm
-                </div>
-            </div>
-            <div class="custom-input-section">
-                <label for="customSize"><strong>Custom Size:</strong></label>
-                <input type="number" id="customSize" placeholder="0.0" step="0.1" min="0.1">
-                <span>mm</span>
-                <button onclick="setCustomReferenceSize()">Use Custom Size</button>
-            </div>
-        </div>
-        
-        
-        
-        <div class="info-panel">
-            <div class="info-item">Image Size: <span id="imageSize">No image loaded</span></div>
-            <div class="info-item">Canvas Size: <span id="canvasSize">No image loaded</span></div>
-            <div class="info-item">Scale Length: <span id="scaleLength">200 pixels</span></div>
-            <div class="info-item">Reference Length: <span id="referenceLength">85.6 mm (Credit Card)</span></div>
-            <div class="ratio-display">
-                Pixel to MM Ratio: <span id="pixelRatio">Upload an image to calculate</span>
-            </div>
-        </div>
-
-        <div class="instructions">
-            <h3>Instructions:</h3>
-            <p>1. Upload an image using the file input below (or use the same image from above)</p>
-            <p>2. The red scale line represents your chosen reference measurement</p>
-            <p>3. Drag the scale line to position it over a known measurement in your image</p>
-            <p>4. Resize the scale by dragging the circular handles at each end</p>
-            <p>5. The pixel-to-mm ratio will be calculated and can be synced to the form above</p>
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // STL Processor variables
+        let cropper;
+        let circles = [];
+        let selectedCircle = null;
+        let dragMode = null;
+        let dragStart = { x: 0, y: 0 };
+        let canvas, ctx;
+        let currentImage = null;
+        let measureMode = false;
+        let globalPixelToMmRatio = null; // Global storage for pixel to mm ratio
+
         const fileInput = document.getElementById('fileInput');
         const imagePreview = document.getElementById('imagePreview');
         const previewContainer = document.getElementById('preview-container');
         const cropBtn = document.getElementById('cropBtn');
+        const measureBtn = document.getElementById('measureBtn');
         const uploadBtn = document.getElementById('uploadBtn');
         const croppedImageInput = document.getElementById('croppedImageInput');
-        const form = document.getElementById('uploadForm');
-        const spinner = document.getElementById('spinner');
-        const mmPerPixelInput = document.getElementById('mmPerPixel');
-        const syncRatioBtn = document.getElementById('syncRatioBtn');
-        const useAboveImageBtn = document.getElementById('useAboveImageBtn');
-        
-        // Box height elements
-        const boxHeightInput = document.getElementById('boxHeight');
-        const heightUnitsInput = document.getElementById('heightUnits');
+        const addCircleBtn = document.getElementById('addCircleBtn');
+        const clearCirclesBtn = document.getElementById('clearCirclesBtn');
+        const showOutputBtn = document.getElementById('showOutputBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const drawingCanvas = document.getElementById('drawingCanvas');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        const outputContainer = document.getElementById('output-container');
+        const outputCanvas = document.getElementById('outputCanvas');
+        const viewSTLBtn = document.getElementById('viewSTLBtn');
 
-        let cropper;
-        let cropperImageData = null; // Store the cropped image data
+        // STL Viewer variables
+        let stlScene, stlCamera, stlRenderer, stlMesh;
 
-        // Scale Measurer variables
-        let canvas, ctx, scaleImage;
-        let isDragging = false;
-        let dragMode = 'move';
-        let dragStart = { x: 0, y: 0 };
-        let scalePosition = { x: 300, y: 200, width: 200 };
-        
-        let REFERENCE_MM = 85.6;
-        let REFERENCE_NAME = 'Credit Card';
+        // Initialize canvas
+        canvas = drawingCanvas;
+        ctx = canvas.getContext('2d');
 
-        // Box height functionality
-        function updateBoxHeightFromUnits() {
-            const units = parseInt(heightUnitsInput.value) || 1;
-            const height = Math.max(4.75, units * 7); // Ensure minimum 4.75mm
-            boxHeightInput.value = height;
-        }
-
-        function updateUnitsFromBoxHeight() {
-            const height = parseFloat(boxHeightInput.value) || 4.75;
-            const units = Math.max(1, Math.round(height / 7));
-            heightUnitsInput.value = units;
-            // Update box height to match rounded units
-            const adjustedHeight = Math.max(4.75, units * 7);
-            boxHeightInput.value = adjustedHeight;
-        }
-
-        // Event listeners for box height
-        heightUnitsInput.addEventListener('input', updateBoxHeightFromUnits);
-        boxHeightInput.addEventListener('change', updateUnitsFromBoxHeight);
-
-        // Initialize Scale Measurer
-        document.addEventListener('DOMContentLoaded', function() {
-            canvas = document.getElementById('imageCanvas');
-            ctx = canvas.getContext('2d');
-            
-            const scaleFileInput = document.getElementById('scaleImageUpload');
-            scaleFileInput.addEventListener('change', handleScaleImageUpload);
-            
-            setupScaleInteraction();
-            updateScaleDisplay();
-        });
-
-        // STL Processor functionality
+        // File input handler
         fileInput.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -560,320 +154,760 @@
             const reader = new FileReader();
             reader.onload = function (e) {
                 imagePreview.src = e.target.result;
+                currentImage = e.target.result;
                 previewContainer.classList.remove('hidden');
-                useAboveImageBtn.disabled = false;
 
                 if (cropper) cropper.destroy();
-                cropper = new Cropper(imagePreview, {
-                    aspectRatio: NaN,
-                    viewMode: 1
-                });
+                
+                // Wait for image to load before creating cropper
+                imagePreview.onload = function() {
+                    cropper = new Cropper(imagePreview, {
+                        aspectRatio: NaN,
+                        viewMode: 1,
+                        crop: function(event) {
+                            updateCanvasForCrop();
+                        }
+                    });
+                    
+                    // Initialize canvas size
+                    setTimeout(() => {
+                        updateCanvasForCrop();
+                    }, 100);
+                };
             };
             reader.readAsDataURL(file);
         });
 
+        // Update canvas to match cropped area
+        function updateCanvasForCrop() {
+            if (!cropper) return;
+            
+            const cropData = cropper.getData();
+            const imageData = cropper.getImageData();
+            const containerData = cropper.getContainerData();
+            
+            // Calculate scale
+            const scale = imageData.width / imageData.naturalWidth;
+            
+            // Set canvas size to match visible cropped area
+            canvas.width = cropData.width * scale;
+            canvas.height = cropData.height * scale;
+            
+            // Position canvas over cropped area
+            canvas.style.left = (cropData.x - imageData.left) * scale + 'px';
+            canvas.style.top = (cropData.y - imageData.top) * scale + 'px';
+            
+            drawCircles();
+            
+            // Update red outline if in measure mode
+            if (measureMode) {
+                updateCropOutline(cropData, imageData, scale);
+            }
+        }
+
+        // Update red outline around crop area
+        function updateCropOutline(cropData, imageData, scale) {
+            // Remove existing outline
+            const existingOutline = document.querySelector('.crop-outline');
+            if (existingOutline) {
+                existingOutline.remove();
+            }
+            
+            // Create new outline
+            const outline = document.createElement('div');
+            outline.className = 'crop-outline';
+            outline.style.left = (cropData.x - imageData.left) * scale + 'px';
+            outline.style.top = (cropData.y - imageData.top) * scale + 'px';
+            outline.style.width = cropData.width * scale + 'px';
+            outline.style.height = cropData.height * scale + 'px';
+            
+            canvasWrapper.appendChild(outline);
+        }
+
+        // Measure Reference Object button
+        measureBtn.addEventListener('click', function() {
+            if (!cropper) return;
+            
+            measureMode = !measureMode;
+            
+            if (measureMode) {
+                // Disable cropper
+                cropper.disable();
+                measureBtn.textContent = 'Exit Measure Mode';
+                measureBtn.style.backgroundColor = '#ff6b6b';
+                
+                // Show red outline
+                const cropData = cropper.getData();
+                const imageData = cropper.getImageData();
+                const scale = imageData.width / imageData.naturalWidth;
+                updateCropOutline(cropData, imageData, scale);
+                
+                // Initialize measurement system
+                initializeMeasurementSystem();
+                
+            } else {
+                // Re-enable cropper
+                cropper.enable();
+                measureBtn.textContent = 'Measure Reference Object';
+                measureBtn.style.backgroundColor = '';
+                
+                // Remove red outline and measurement UI
+                const existingOutline = document.querySelector('.crop-outline');
+                if (existingOutline) {
+                    existingOutline.remove();
+                }
+                removeMeasurementSystem();
+            }
+        });
+
+        // Measurement system variables
+        let measurementCanvas, measurementCtx;
+        let measurementClicks = [];
+        let measurementMode = 'calibrate';
+        let pixelToMmRatio = null;
+        let measurementScale = 1;
+
+        function initializeMeasurementSystem() {
+            // Create measurement controls
+            const measurementControls = document.createElement('div');
+            measurementControls.id = 'measurementControls';
+            measurementControls.innerHTML = `
+                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc; background: #f9f9f9;">
+                    <select id="referenceSelect"></select>
+                    <br><br>
+                    <input type="checkbox" id="customCheckbox">
+                    <label for="customCheckbox">Use your own reference size (mm)</label>
+                    <br><br>
+                    <input type="text" id="referenceInput" placeholder="85.6" style="width: 100px;" value="85.6" disabled>
+                    <span>mm (custom reference size)</span>
+                    <br><br>
+                    <div id="measurementOutput"></div>
+                    <button id="checkMeasureBtn" style="display: none;">Check Distance Measurement</button>
+                </div>
+            `;
+            
+            canvasWrapper.appendChild(measurementControls);
+            
+            // Create measurement canvas overlay that covers the entire image
+            measurementCanvas = document.createElement('canvas');
+            measurementCanvas.id = 'measurementCanvas';
+            measurementCanvas.style.position = 'absolute';
+            measurementCanvas.style.top = '0';
+            measurementCanvas.style.left = '0';
+            measurementCanvas.style.pointerEvents = 'auto';
+            measurementCanvas.style.cursor = 'crosshair';
+            measurementCanvas.style.zIndex = '25';
+            
+            canvasWrapper.appendChild(measurementCanvas);
+            measurementCtx = measurementCanvas.getContext('2d');
+            
+            // Set up measurement canvas size and position to cover entire image
+            updateMeasurementCanvas();
+            
+            // Setup reference objects
+            setupReferenceObjects();
+            
+            // Add measurement event listeners
+            addMeasurementEventListeners();
+        }
+
+        function updateMeasurementCanvas() {
+            if (!cropper || !measurementCanvas) return;
+            
+            const imageData = cropper.getImageData();
+            measurementScale = imageData.width / imageData.naturalWidth;
+            
+            // Cover the entire displayed image, not just crop area
+            measurementCanvas.width = imageData.width;
+            measurementCanvas.height = imageData.height;
+            measurementCanvas.style.left = imageData.left + 'px';
+            measurementCanvas.style.top = imageData.top + 'px';
+            measurementCanvas.style.width = imageData.width + 'px';
+            measurementCanvas.style.height = imageData.height + 'px';
+            
+            redrawMeasurement();
+        }
+
+        function setupReferenceObjects() {
+            const refObjects = {
+                'credit card': 85.6, 
+                'us business card': 88.9, 
+                'us quarter': 24.26, 
+                'us $1 bill': 155.956, 
+                '5 mxn coin': 25.5, 
+                '10 mxn coin': 28, 
+                'aa battery': 14.5, 
+                'aaa battery': 10.5, 
+                'us penny': 19.05, 
+                'us dime': 17.91, 
+                '€1 coin': 23.25, 
+                '£1 coin': 23.03, 
+                '¥100 coin': 22.6, 
+                '₹1 coin': 20, 
+                '₹5 coin': 23, 
+                'post-it note': 76.2
+            };
+            
+            const referenceSelect = document.getElementById('referenceSelect');
+            for (const [name, size] of Object.entries(refObjects)) {
+                const option = document.createElement('option');
+                option.value = size;
+                option.textContent = `${name} (${size}mm)`;
+                referenceSelect.appendChild(option);
+            }
+        }
+
+        function addMeasurementEventListeners() {
+            const referenceSelect = document.getElementById('referenceSelect');
+            const customCheckbox = document.getElementById('customCheckbox');
+            const referenceInput = document.getElementById('referenceInput');
+            const checkMeasureBtn = document.getElementById('checkMeasureBtn');
+            
+            measurementCanvas.addEventListener('click', function(e) {
+                const rect = measurementCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                measurementClicks.push({x, y});
+                if (measurementClicks.length > 2) {
+                    measurementClicks = [{x, y}];
+                    document.getElementById('measurementOutput').innerHTML = '';
+                }
+                redrawMeasurement();
+            });
+            
+            referenceSelect.addEventListener('change', function() {
+                if (!customCheckbox.checked) referenceInput.value = referenceSelect.value;
+                updateMeasurementCalculations();
+            });
+            
+            referenceInput.addEventListener('input', function() {
+                if (customCheckbox.checked) updateMeasurementCalculations();
+            });
+            
+            customCheckbox.addEventListener('change', function() {
+                if (customCheckbox.checked) {
+                    referenceInput.disabled = false;
+                    referenceSelect.disabled = true;
+                } else {
+                    referenceInput.disabled = true;
+                    referenceSelect.disabled = false;
+                    referenceInput.value = referenceSelect.value;
+                }
+                updateMeasurementCalculations();
+            });
+            
+            checkMeasureBtn.addEventListener('click', function() {
+                measurementMode = 'measure';
+                measurementClicks = [];
+                document.getElementById('measurementOutput').innerHTML = 'Measurement mode - click two points to measure distance';
+                redrawMeasurement();
+            });
+        }
+
+        function updateMeasurementCalculations() {
+            if (measurementClicks.length === 2) {
+                const dx = measurementClicks[1].x - measurementClicks[0].x;
+                const dy = measurementClicks[1].y - measurementClicks[0].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (measurementMode === 'calibrate') {
+                    const customCheckbox = document.getElementById('customCheckbox');
+                    const referenceInput = document.getElementById('referenceInput');
+                    const referenceSelect = document.getElementById('referenceSelect');
+                    
+                    const refSize = customCheckbox.checked ? 
+                        (parseFloat(referenceInput.value) || 85.6) : 
+                        parseFloat(referenceSelect.value);
+                    
+                    pixelToMmRatio = refSize / distance;
+                    globalPixelToMmRatio = pixelToMmRatio; // Store globally
+                    
+                    // Update the form field and display
+                    document.getElementById('mmPerPixelInput').value = globalPixelToMmRatio;
+                    document.getElementById('ratioValue').textContent = globalPixelToMmRatio.toFixed(4);
+                    document.getElementById('ratioDisplay').style.display = 'block';
+                    
+                    document.getElementById('measurementOutput').innerHTML = 
+                        `Pixel distance: ${distance.toFixed(2)} px<br>` +
+                        `Px to mm ratio: ${pixelToMmRatio.toFixed(4)}<br>` +
+                        `Estimated mm measured: ${refSize} mm<br>` +
+                        `<strong>Global ratio stored: ${globalPixelToMmRatio.toFixed(4)} mm/px</strong>`;
+                    document.getElementById('checkMeasureBtn').style.display = 'block';
+                } else {
+                    const estimatedLength = distance * pixelToMmRatio;
+                    document.getElementById('measurementOutput').innerHTML = 
+                        `Pixel distance: ${distance.toFixed(2)} px<br>` +
+                        `Px to mm ratio: ${pixelToMmRatio.toFixed(4)}<br>` +
+                        `Estimated length: ${estimatedLength.toFixed(2)} mm`;
+                }
+            }
+        }
+
+        function redrawMeasurement() {
+            if (!measurementCtx) return;
+            
+            measurementCtx.clearRect(0, 0, measurementCanvas.width, measurementCanvas.height);
+            
+            measurementClicks.forEach(click => {
+                const x = click.x, y = click.y;
+                measurementCtx.strokeStyle = measurementMode === 'calibrate' ? '#ff0000' : '#00ff00';
+                measurementCtx.lineWidth = 1;
+                measurementCtx.beginPath();
+                measurementCtx.moveTo(x - 10, y);
+                measurementCtx.lineTo(x + 10, y);
+                measurementCtx.moveTo(x, y - 10);
+                measurementCtx.lineTo(x, y + 10);
+                measurementCtx.stroke();
+            });
+            
+            if (measurementClicks.length === 2) {
+                const x1 = measurementClicks[0].x, y1 = measurementClicks[0].y;
+                const x2 = measurementClicks[1].x, y2 = measurementClicks[1].y;
+                measurementCtx.strokeStyle = measurementMode === 'calibrate' ? 'rgba(255, 0, 0, 0.5)' : 'rgba(0, 255, 0, 0.5)';
+                measurementCtx.lineWidth = 4;
+                measurementCtx.beginPath();
+                measurementCtx.moveTo(x1, y1);
+                measurementCtx.lineTo(x2, y2);
+                measurementCtx.stroke();
+                updateMeasurementCalculations();
+            }
+        }
+
+        function removeMeasurementSystem() {
+            const measurementControls = document.getElementById('measurementControls');
+            if (measurementControls) {
+                measurementControls.remove();
+            }
+            
+            if (measurementCanvas) {
+                measurementCanvas.remove();
+                measurementCanvas = null;
+                measurementCtx = null;
+            }
+            
+            // Reset measurement variables
+            measurementClicks = [];
+            measurementMode = 'calibrate';
+            pixelToMmRatio = null;
+        }
+
+        // Add circle button
+        addCircleBtn.addEventListener('click', function() {
+            // If in measure mode, exit it first
+            if (measureMode) {
+                measureMode = false;
+                cropper.enable();
+                measureBtn.textContent = 'Measure Reference Object';
+                measureBtn.style.backgroundColor = '';
+                
+                // Remove red outline and measurement UI
+                const existingOutline = document.querySelector('.crop-outline');
+                if (existingOutline) {
+                    existingOutline.remove();
+                }
+                removeMeasurementSystem();
+            }
+            
+            // Toggle add circle mode
+            if (addCircleBtn.textContent === 'Add Circle') {
+                addCircleBtn.textContent = 'Exit Add Circle Mode';
+                addCircleBtn.style.backgroundColor = '#4CAF50';
+                canvas.style.cursor = 'crosshair';
+                
+                // Show instruction
+                const instruction = document.createElement('div');
+                instruction.id = 'addCircleInstruction';
+                instruction.style.cssText = 'margin: 10px 0; padding: 10px; border: 1px solid #4CAF50; background: #e8f5e8; color: #2e7d32;';
+                instruction.innerHTML = 'Add Thumb holes to part - Click anywhere on the cropped image to add circles';
+                canvasWrapper.appendChild(instruction);
+            } else {
+                addCircleBtn.textContent = 'Add Circle';
+                addCircleBtn.style.backgroundColor = '';
+                canvas.style.cursor = 'crosshair';
+                
+                // Remove instruction
+                const instruction = document.getElementById('addCircleInstruction');
+                if (instruction) {
+                    instruction.remove();
+                }
+            }
+        });
+
+        // Clear circles button
+        clearCirclesBtn.addEventListener('click', function() {
+            circles = [];
+            drawCircles();
+            removeAllHandles();
+        });
+
+        // Sample color from the cropped image
+        function sampleColorFromImage(x, y) {
+            if (!cropper) return '#FF0000';
+            
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Get cropped canvas from cropper
+            const croppedCanvas = cropper.getCroppedCanvas();
+            tempCanvas.width = croppedCanvas.width;
+            tempCanvas.height = croppedCanvas.height;
+            tempCtx.drawImage(croppedCanvas, 0, 0);
+            
+            // Scale coordinates to match the cropped canvas size
+            const scaleX = croppedCanvas.width / canvas.width;
+            const scaleY = croppedCanvas.height / canvas.height;
+            
+            const sampleX = Math.floor(x * scaleX);
+            const sampleY = Math.floor(y * scaleY);
+            
+            // Get pixel data
+            const pixelData = tempCtx.getImageData(sampleX, sampleY, 1, 1).data;
+            
+            // Convert to hex color
+            const r = pixelData[0];
+            const g = pixelData[1];
+            const b = pixelData[2];
+            
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+
+        // Draw all circles
+        function drawCircles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            circles.forEach(circle => {
+                ctx.beginPath();
+                ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = circle.color;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Match fill to stroke color
+                ctx.fillStyle = circle.color;
+                ctx.fill();
+            });
+        }
+
+        // Create resize handles for circles
+        function createHandles() {
+            removeAllHandles();
+            
+            circles.forEach((circle, index) => {
+                // Create handle for resizing
+                const handle = document.createElement('div');
+                handle.className = 'circle-handle';
+                handle.dataset.circleIndex = index;
+                
+                // Position handle on circle edge
+                const handleX = circle.x + circle.radius;
+                const handleY = circle.y;
+                
+                handle.style.left = (parseInt(canvas.style.left) + handleX) + 'px';
+                handle.style.top = (parseInt(canvas.style.top) + handleY) + 'px';
+                
+                handle.addEventListener('mousedown', startResize);
+                canvasWrapper.appendChild(handle);
+            });
+        }
+
+        // Remove all handles
+        function removeAllHandles() {
+            document.querySelectorAll('.circle-handle').forEach(handle => handle.remove());
+        }
+
+        // Start resizing circle
+        function startResize(e) {
+            e.preventDefault();
+            selectedCircle = parseInt(e.target.dataset.circleIndex);
+            dragMode = 'resize';
+            dragStart.x = e.clientX;
+            dragStart.y = e.clientY;
+            
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        // Canvas mouse events for moving circles and adding new circles
+        canvas.addEventListener('mousedown', function(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // If in add circle mode, add a new circle
+            if (addCircleBtn.textContent === 'Exit Add Circle Mode') {
+                // Sample color from image at circle position
+                const color = sampleColorFromImage(x, y);
+                
+                circles.push({
+                    x: x,
+                    y: y,
+                    radius: 30,
+                    color: color
+                });
+                
+                drawCircles();
+                createHandles();
+                return;
+            }
+            
+            // Check if clicking on a circle for moving
+            for (let i = circles.length - 1; i >= 0; i--) {
+                const circle = circles[i];
+                const dist = Math.sqrt((x - circle.x) ** 2 + (y - circle.y) ** 2);
+                
+                if (dist <= circle.radius) {
+                    selectedCircle = i;
+                    dragMode = 'move';
+                    dragStart.x = x - circle.x;
+                    dragStart.y = y - circle.y;
+                    
+                    document.addEventListener('mousemove', handleDrag);
+                    document.addEventListener('mouseup', stopDrag);
+                    break;
+                }
+            }
+        });
+
+        // Handle dragging
+        function handleDrag(e) {
+            if (dragMode === 'move' && selectedCircle !== null) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                circles[selectedCircle].x = x - dragStart.x;
+                circles[selectedCircle].y = y - dragStart.y;
+                
+                // Update color based on new position
+                circles[selectedCircle].color = sampleColorFromImage(
+                    circles[selectedCircle].x, 
+                    circles[selectedCircle].y
+                );
+                
+                drawCircles();
+                createHandles();
+            } else if (dragMode === 'resize' && selectedCircle !== null) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const circle = circles[selectedCircle];
+                const newRadius = Math.sqrt((x - circle.x) ** 2 + (y - circle.y) ** 2);
+                circle.radius = Math.max(10, newRadius);
+                
+                drawCircles();
+                createHandles();
+            }
+        }
+
+        // Stop dragging
+        function stopDrag() {
+            dragMode = null;
+            selectedCircle = null;
+            document.removeEventListener('mousemove', handleDrag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+
+        // Show output button - combine cropped image with circles
+        showOutputBtn.addEventListener('click', function() {
+            if (!cropper) return;
+            
+            // Get the cropped canvas
+            const croppedCanvas = cropper.getCroppedCanvas();
+            
+            // Set output canvas size
+            const outputCtx = outputCanvas.getContext('2d');
+            outputCanvas.width = croppedCanvas.width;
+            outputCanvas.height = croppedCanvas.height;
+            
+            // Draw the cropped image
+            outputCtx.drawImage(croppedCanvas, 0, 0);
+            
+            // Draw circles on top of the image
+            const scaleX = croppedCanvas.width / canvas.width;
+            const scaleY = croppedCanvas.height / canvas.height;
+            
+            circles.forEach(circle => {
+                outputCtx.beginPath();
+                outputCtx.arc(
+                    circle.x * scaleX, 
+                    circle.y * scaleY, 
+                    circle.radius * scaleX, 
+                    0, 
+                    Math.PI * 2
+                );
+                outputCtx.strokeStyle = circle.color;
+                outputCtx.lineWidth = 3 * scaleX;
+                outputCtx.stroke();
+                outputCtx.fillStyle = circle.color;
+                outputCtx.fill();
+            });
+            
+            // Show output container and download button
+            outputContainer.classList.remove('hidden');
+            downloadBtn.classList.remove('hidden');
+        });
+
+        // Download button - download combined image
+        downloadBtn.addEventListener('click', function() {
+            outputCanvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'combined-image.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        });
+
+        // Crop button handler
         cropBtn.addEventListener('click', function () {
             if (!cropper) return;
 
-            const canvas = cropper.getCroppedCanvas({
+            const croppedCanvas = cropper.getCroppedCanvas({
                 width: 500,
                 imageSmoothingEnabled: true,
                 imageSmoothingQuality: 'high',
             });
             
-            canvas.toBlob(function (blob) {
+            croppedCanvas.toBlob(function (blob) {
                 const reader = new FileReader();
                 reader.onloadend = function () {
                     croppedImageInput.value = reader.result;
-                    cropperImageData = reader.result; // Store for scale measurer
                     uploadBtn.disabled = false;
                 };
                 reader.readAsDataURL(blob);
             }, 'image/png');
         });
 
-        form.addEventListener('submit', function () {
-            spinner.style.display = 'block';
-            uploadBtn.disabled = true;
-            uploadBtn.textContent = "Uploading...";
-        });
-
-        // Use image from above button
-        useAboveImageBtn.addEventListener('click', function() {
-            if (cropperImageData) {
-                // Use the cropped image data
-                loadImageToScaleMeasurer(cropperImageData);
-            } else if (imagePreview.src) {
-                // Use the original uploaded image
-                loadImageToScaleMeasurer(imagePreview.src);
-            }
-        });
-
-        // Sync ratio button
-        syncRatioBtn.addEventListener('click', function() {
-            const mmPerPixel = REFERENCE_MM / scalePosition.width;
-            mmPerPixelInput.value = mmPerPixel.toFixed(6);
-        });
-
-        function loadImageToScaleMeasurer(imageSrc) {
-            scaleImage = new Image();
-            scaleImage.onload = function() {
-                document.getElementById('canvasContainer').style.display = 'inline-block';
-                drawImageOnCanvas();
-                updateImageInfo();
-                updatePixelRatio();
-                syncRatioBtn.disabled = false;
-            };
-            scaleImage.src = imageSrc;
-        }
-
-        // Scale Measurer functionality
-        function handleScaleImageUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                loadImageToScaleMeasurer(e.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function drawImageOnCanvas() {
-            canvas.width = scaleImage.width;
-            canvas.height = scaleImage.height;
-            
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(scaleImage, 0, 0);
-            
-            updateCanvasInfo();
-        }
-
-        function setupScaleInteraction() {
-            const scaleLine = document.getElementById('scaleLine');
-            const leftHandle = document.getElementById('leftHandle');
-            const rightHandle = document.getElementById('rightHandle');
-            
-            scaleLine.addEventListener('mousedown', function(e) {
-                if (e.target === leftHandle || e.target === rightHandle) return;
-                startDrag(e, 'move');
-            });
-            
-            leftHandle.addEventListener('mousedown', function(e) {
-                e.stopPropagation();
-                startDrag(e, 'resize-left');
-            });
-            
-            rightHandle.addEventListener('mousedown', function(e) {
-                e.stopPropagation();
-                startDrag(e, 'resize-right');
-            });
-            
-            document.addEventListener('mousemove', handleDrag);
-            document.addEventListener('mouseup', stopDrag);
-        }
-        
-        function startDrag(e, mode) {
-            isDragging = true;
-            dragMode = mode;
-            const rect = document.getElementById('canvasContainer').getBoundingClientRect();
-            dragStart.x = e.clientX - rect.left;
-            dragStart.y = e.clientY - rect.top;
+        // Form submit handler
+        document.getElementById('uploadForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-        }
-        
-        function handleDrag(e) {
-            if (!isDragging) return;
             
-            const rect = document.getElementById('canvasContainer').getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            
-            const deltaX = mouseX - dragStart.x;
-            const deltaY = mouseY - dragStart.y;
-            
-            if (dragMode === 'move') {
-                scalePosition.x = Math.max(0, Math.min(canvas.width - scalePosition.width, scalePosition.x + deltaX));
-                scalePosition.y = Math.max(0, Math.min(canvas.height - 20, scalePosition.y + deltaY));
-            } else if (dragMode === 'resize-left') {
-                const newWidth = scalePosition.width - deltaX;
-                if (newWidth > 20) {
-                    scalePosition.x += deltaX;
-                    scalePosition.width = newWidth;
-                }
-            } else if (dragMode === 'resize-right') {
-                const newWidth = scalePosition.width + deltaX;
-                if (newWidth > 20 && scalePosition.x + newWidth <= canvas.width) {
-                    scalePosition.width = newWidth;
-                }
+            if (!globalPixelToMmRatio) {
+                alert('Please set the scale by using "Measure Reference Object" first');
+                return;
             }
             
-            dragStart.x = mouseX;
-            dragStart.y = mouseY;
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = "Processing...";
             
-            updateScaleDisplay();
-            updatePixelRatio();
-        }
-        
-        function stopDrag() {
-            isDragging = false;
-        }
-        
-        function updateScaleDisplay() {
-            const scaleLine = document.getElementById('scaleLine');
-            scaleLine.style.left = scalePosition.x + 'px';
-            scaleLine.style.top = scalePosition.y + 'px';
-            scaleLine.style.width = scalePosition.width + 'px';
-            
-            document.getElementById('scaleLength').textContent = scalePosition.width + ' pixels';
-            document.getElementById('scaleLabel').textContent = REFERENCE_MM + ' mm';
-        }
-        
-        function updateImageInfo() {
-            if (scaleImage) {
-                document.getElementById('imageSize').textContent = `${scaleImage.width} × ${scaleImage.height} pixels`;
-            }
-        }
-        
-        function updateCanvasInfo() {
-            document.getElementById('canvasSize').textContent = `${canvas.width} × ${canvas.height} pixels`;
-        }
-        
-        function updatePixelRatio() {
-            if (scalePosition.width > 0) {
-                const pixelsPerMM = scalePosition.width / REFERENCE_MM;
-                const mmPerPixel = REFERENCE_MM / scalePosition.width;
+            try {
+                const formData = new FormData();
+                formData.append('croppedImage', croppedImageInput.value);
+                formData.append('mm_per_pixel', globalPixelToMmRatio);
+                formData.append('box_height', document.getElementById('boxHeight').value);
                 
-                document.getElementById('pixelRatio').textContent = 
-                    `${pixelsPerMM.toFixed(3)} pixels/mm (${mmPerPixel.toFixed(6)} mm/pixel)`;
+                // Add circle data
+                formData.append('circles', JSON.stringify(circles));
+                
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.text();
+                    uploadBtn.textContent = "Upload Complete!";
+                    uploadBtn.style.backgroundColor = '#4CAF50';
+                    viewSTLBtn.classList.remove('hidden');
+                    alert('STL file generated successfully!');
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (error) {
+                alert('Error uploading: ' + error.message);
+                uploadBtn.textContent = "Upload Image";
+                uploadBtn.disabled = false;
             }
-        }
-        
-        function setReferenceSize(size, name) {
-            REFERENCE_MM = size;
-            REFERENCE_NAME = name;
-            updateReferenceDisplay();
-            updateScaleDisplay();
-            updatePixelRatio();
-        }
-        
-        function setCustomReferenceSize() {
-            const customInput = document.getElementById('customSize');
-            const customSize = parseFloat(customInput.value);
+        });
+
+        // View STL button handler
+        viewSTLBtn.addEventListener('click', function() {
+            const stlViewerContainer = document.getElementById('stl-viewer-container');
+            stlViewerContainer.classList.remove('hidden');
+            stlViewerContainer.scrollIntoView({ behavior: 'smooth' });
             
-            if (customSize && customSize > 0) {
-                REFERENCE_MM = customSize;
-                REFERENCE_NAME = 'Custom';
-                updateReferenceDisplay();
-                updateScaleDisplay();
-                updatePixelRatio();
-                customInput.value = '';
-            } else {
-                alert('Please enter a valid size greater than 0');
+            if (!stlRenderer) {
+                initSTLViewer();
             }
+        });
+
+        // STL Viewer functions
+        function initSTLViewer() {
+            const container = document.getElementById('stl-container');
+            
+            stlScene = new THREE.Scene();
+            stlScene.background = new THREE.Color(0x222222);
+            
+            stlCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+            stlCamera.position.z = 50;
+            
+            stlRenderer = new THREE.WebGLRenderer({ antialias: true });
+            stlRenderer.setSize(500, 500);
+            container.appendChild(stlRenderer.domElement);
+            
+            stlScene.add(new THREE.AmbientLight(0x404040, 0.4));
+            
+            const light = new THREE.DirectionalLight(0xffffff, 0.8);
+            light.position.set(1, 1, 1);
+            stlScene.add(light);
+            
+            setupSTLControls();
+            animateSTL();
+            
+            // Setup load button
+            document.getElementById('loadSTLButton').onclick = loadSTL;
         }
         
-        function updateReferenceDisplay() {
-            document.getElementById('referenceLength').textContent = 
-                `${REFERENCE_MM} mm (${REFERENCE_NAME})`;
-        }
-    </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script>
-        let scene, camera, renderer, mesh;
-        
-        function init() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x222222);
+        function setupSTLControls() {
+            let isDown = false, mouseX = 0, mouseY = 0;
             
-            camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-            camera.position.set(0, 0, 0);
-            
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(500, 500);
-            document.getElementById('container').appendChild(renderer.domElement);
-            
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(1, 1, 1);
-            scene.add(directionalLight);
-            
-            setupControls();
-            animate();
-        }
-        
-        function setupControls() {
-            let isMouseDown = false;
-            let mouseX = 0, mouseY = 0;
-            let targetRotationX = 0, targetRotationY = 0;
-            let currentRotationX = 0, currentRotationY = 0;
-            
-            renderer.domElement.addEventListener('mousedown', (e) => {
-                isMouseDown = true;
+            stlRenderer.domElement.onmousedown = (e) => {
+                isDown = true;
                 mouseX = e.clientX;
                 mouseY = e.clientY;
-            });
+            };
             
-            renderer.domElement.addEventListener('mousemove', (e) => {
-                if (isMouseDown && mesh) {
-                    const deltaX = e.clientX - mouseX;
-                    const deltaY = e.clientY - mouseY;
-                    
-                    targetRotationY += deltaX * 0.01;
-                    targetRotationX += deltaY * 0.01;
-                    
+            stlRenderer.domElement.onmousemove = (e) => {
+                if (isDown && stlMesh) {
+                    stlMesh.rotation.y += (e.clientX - mouseX) * 0.01;
+                    stlMesh.rotation.x += (e.clientY - mouseY) * 0.01;
                     mouseX = e.clientX;
                     mouseY = e.clientY;
                 }
-            });
+            };
             
-            renderer.domElement.addEventListener('mouseup', () => {
-                isMouseDown = false;
-            });
+            stlRenderer.domElement.onmouseup = () => isDown = false;
             
-            renderer.domElement.addEventListener('wheel', (e) => {
-                camera.position.z += e.deltaY * 0.01;
-                camera.position.z = Math.max(1, Math.min(200, camera.position.z));
-            });
-            
-            function updateRotation() {
-                if (mesh) {
-                    currentRotationX += (targetRotationX - currentRotationX) * 0.1;
-                    currentRotationY += (targetRotationY - currentRotationY) * 0.1;
-                    
-                    mesh.rotation.x = currentRotationX;
-                    mesh.rotation.y = currentRotationY;
-                }
-                requestAnimationFrame(updateRotation);
-            }
-            updateRotation();
+            stlRenderer.domElement.onwheel = (e) => {
+                stlCamera.position.z += e.deltaY * 0.1;
+                stlCamera.position.z = Math.max(5, Math.min(200, stlCamera.position.z));
+            };
         }
         
         async function loadSTL() {
             try {
                 const response = await fetch('/static/test4.stl');
-                if (!response.ok) throw new Error(`Oops! no 3d model generated. please try uploading an image then try again HTTP error! status: ${response.status}`);
+                const buffer = await response.arrayBuffer();
+                const geometry = parseSTL(buffer);
                 
-                const arrayBuffer = await response.arrayBuffer();
-                const geometry = parseSTL(arrayBuffer);
+                if (stlMesh) stlScene.remove(stlMesh);
                 
-                if (mesh) scene.remove(mesh);
+                stlMesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: 0x00ff00 }));
                 
-                const material = new THREE.MeshLambertMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
-                mesh = new THREE.Mesh(geometry, material);
-                
-                const box = new THREE.Box3().setFromObject(mesh);
+                const box = new THREE.Box3().setFromObject(stlMesh);
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
                 
-                mesh.position.sub(center);
-                const maxDim = Math.max(size.x, size.y, size.z);
-                mesh.scale.setScalar(13 / maxDim);
+                stlMesh.position.sub(center);
+                stlMesh.scale.setScalar(20 / Math.max(size.x, size.y, size.z));
                 
-                scene.add(mesh);
-                document.getElementById('loadButton').classList.add('hidden');
+                stlScene.add(stlMesh);
+                document.getElementById('loadSTLButton').style.display = 'none';
             } catch (error) {
                 alert('Error loading STL: ' + error.message);
             }
@@ -881,75 +915,34 @@
         
         function parseSTL(buffer) {
             const view = new DataView(buffer);
-            const isASCII = buffer.byteLength < 80 || new TextDecoder().decode(buffer.slice(0, 5)) === 'solid';
-            return isASCII ? parseASCIISTL(buffer) : parseBinarySTL(buffer);
-        }
-        
-        function parseBinarySTL(buffer) {
-            const view = new DataView(buffer);
             const triangles = view.getUint32(80, true);
-            const geometry = new THREE.BufferGeometry();
             const vertices = new Float32Array(triangles * 9);
-            const normals = new Float32Array(triangles * 9);
             
             let offset = 84;
             for (let i = 0; i < triangles; i++) {
-                const normal = [view.getFloat32(offset, true), view.getFloat32(offset + 4, true), view.getFloat32(offset + 8, true)];
-                offset += 12;
-                
+                offset += 12; // skip normal
                 for (let j = 0; j < 3; j++) {
-                    const vertexIndex = i * 9 + j * 3;
-                    vertices[vertexIndex] = view.getFloat32(offset, true);
-                    vertices[vertexIndex + 1] = view.getFloat32(offset + 4, true);
-                    vertices[vertexIndex + 2] = view.getFloat32(offset + 8, true);
-                    
-                    normals[vertexIndex] = normal[0];
-                    normals[vertexIndex + 1] = normal[1];
-                    normals[vertexIndex + 2] = normal[2];
-                    
+                    const idx = i * 9 + j * 3;
+                    vertices[idx] = view.getFloat32(offset, true);
+                    vertices[idx + 1] = view.getFloat32(offset + 4, true);
+                    vertices[idx + 2] = view.getFloat32(offset + 8, true);
                     offset += 12;
                 }
-                offset += 2;
-            }
-            
-            geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-            geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-            return geometry;
-        }
-        
-        function parseASCIISTL(buffer) {
-            const text = new TextDecoder().decode(buffer);
-            const lines = text.split('\n');
-            const vertices = [];
-            const normals = [];
-            
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (line.startsWith('facet normal')) {
-                    const normal = line.split(' ').slice(2).map(parseFloat);
-                    i++;
-                    for (let j = 0; j < 3; j++) {
-                        i++;
-                        const vertex = lines[i].trim().split(' ').slice(1).map(parseFloat);
-                        vertices.push(...vertex);
-                        normals.push(...normal);
-                    }
-                }
+                offset += 2; // skip attribute
             }
             
             const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+            geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            geometry.computeVertexNormals();
             return geometry;
         }
         
-        function animate() {
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
+        function animateSTL() {
+            requestAnimationFrame(animateSTL);
+            if (stlRenderer) {
+                stlRenderer.render(stlScene, stlCamera);
+            }
         }
-        
-        document.getElementById('loadButton').addEventListener('click', loadSTL);
-        init();
     </script>
 </body>
 </html>
